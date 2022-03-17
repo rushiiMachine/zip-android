@@ -1,13 +1,13 @@
 package com.github.diamondminer88.zip;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Closeable;
 import java.io.File;
 import java.util.Iterator;
 
 @SuppressWarnings("unused")
-public class ZipReader {
+public class ZipReader implements Closeable {
     static {
         System.loadLibrary("ziprs");
     }
@@ -40,6 +40,7 @@ public class ZipReader {
      * Destructs the ZipArchive at {@link ZipReader#innerPtr}
      * This MUST be called otherwise you can have a memory leak.
      */
+    @Override
     public native void close();
 
     /**
@@ -67,12 +68,6 @@ public class ZipReader {
      * Number of files contained in this zip.
      */
     public native long getEntryCount();
-
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-        close();
-    }
 
     class ZipEntryNameIterator implements Iterator<String> {
         @SuppressWarnings("FieldMayBeFinal")

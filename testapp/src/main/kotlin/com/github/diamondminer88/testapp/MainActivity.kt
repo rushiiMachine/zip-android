@@ -7,7 +7,6 @@ import android.os.Environment
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.github.diamondminer88.zip.ZipEntry
 import com.github.diamondminer88.zip.ZipReader
 import java.io.File
 
@@ -27,12 +26,13 @@ class MainActivity : AppCompatActivity() {
         zipFile.createNewFile()
         zipFile.writeBytes(resources.openRawResource(R.raw.testzip).readBytes())
 
-        val zip = ZipReader(zipFile)
-        Log.i(TAG, "zip entries: ${zip.entryCount}")
+        ZipReader(zipFile).use {
+            Log.i(TAG, "zip entries: ${it.entryCount}")
 
-        val entry = zip.openEntry("abc.txt")
-            ?: throw Error("Failed to open entry")
-        Log.i(TAG, "entry name: ${entry.name} size: ${entry.size} content: ${entry.readEntry().decodeToString()}")
+            val entry = it.openEntry("abc.txt")
+                ?: throw Error("Failed to open entry")
+            Log.i(TAG, "entry name: ${entry.name} size: ${entry.size} content: ${entry.readEntry().decodeToString()}")
+        }
     }
 
     private fun requestPermissions() {
