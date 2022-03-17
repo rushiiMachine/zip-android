@@ -1,17 +1,34 @@
 // https://github.com/kawamuray/wasmtime-java
-// Apache 2.0 License
 
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Mutex;
 use jni::descriptors::Desc;
 use jni::errors::{Result as JniResult};
+use jni::JNIEnv;
 use jni::objects::{JFieldID, JObject};
 use jni::signature::{JavaType, Primitive};
 use jni::strings::JNIString;
 use jni::sys::jlong;
-use jni::JNIEnv;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Mutex;
 
 pub const INNER_PTR_FIELD: &str = "innerPtr";
+
+pub type Result<T, E = Error> = std::result::Result<T, E>;
+
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("JNI error: {0}")]
+    Jni(#[from] jni::errors::Error),
+    #[error("{0}")]
+    LockPoison(String),
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+}
+
+impl<G> From<std::sync::PoisonError<G>> for Error {
+    fn from(err: std::sync::PoisonError<G>) -> Self {
+        Error::LockPoison(err.to_string())
+    }
+}
 
 pub struct ReentrantLock<T> {
     mutex: Mutex<T>,
@@ -42,7 +59,7 @@ impl<T> ReentrantLock<T> {
         }
     }
 
-    fn lock(&mut self) -> JniResult<ReentrantReference<'_, T>> {
+    fn lock(&mut self) -> Result<ReentrantReference<'_, T>> {
         let current_id = std::thread::current().id().as_u64().get();
         if current_id == self.current_owner.load(Ordering::Relaxed) {
             let reference = self.mutex.get_mut()?;
@@ -77,20 +94,17 @@ impl<'a, T> std::ops::DerefMut for ReentrantReference<'a, T> {
 /// Surrender a Rust object into a pointer.
 /// The given value gets "forgotten" by Rust's memory management
 /// so you have to get it back into a `T` at some point to avoid leaking memory.
-pub fn into_raw<T>(val: T) -> jlong
-    where
-        T: 'static,
-{
+pub fn into_raw<T>(val: T) -> jlong {
     Box::into_raw(Box::new(ReentrantLock::new(val))) as jlong
 }
 
 /// Restore a Rust object of type `T` from a pointer.
 /// This is the reverse operation of `into_raw`.
-pub fn from_raw<T>(ptr: jlong) -> JniResult<T> {
+pub fn from_raw<T>(ptr: jlong) -> Result<T> {
     Ok((*unsafe { Box::from_raw(ptr as *mut Mutex<T>) }).into_inner()?)
 }
 
-pub fn ref_from_raw<'a, T>(ptr: jlong) -> JniResult<ReentrantReference<'a, T>> {
+pub fn ref_from_raw<'a, T>(ptr: jlong) -> Result<ReentrantReference<'a, T>> {
     let ptr = ptr as *mut ReentrantLock<T>;
     unsafe { (*ptr).lock() }
 }
@@ -98,7 +112,7 @@ pub fn ref_from_raw<'a, T>(ptr: jlong) -> JniResult<ReentrantReference<'a, T>> {
 macro_rules! non_null {
     ( $obj:expr, $ctx:expr ) => {
         if $obj.is_null() {
-            return Err(jni::errors::ErrorKind::NullPtr($ctx).into());
+            return Err(jni::errors::Error::NullPtr($ctx).into());
         } else {
             $obj
         }
@@ -112,7 +126,6 @@ pub fn set_field<'a, O, S, T>(env: &JNIEnv<'a>, obj: O, field: S, rust_object: T
     where
         O: Into<JObject<'a>>,
         S: AsRef<str>,
-        T: 'static,
 {
     let obj = obj.into();
     let class = env.auto_local(env.get_object_class(obj)?);
@@ -126,7 +139,7 @@ pub fn set_field<'a, O, S, T>(env: &JNIEnv<'a>, obj: O, field: S, rust_object: T
         .get_field_unchecked(obj, field_id, JavaType::Primitive(Primitive::Long))?
         .j()? as *mut ReentrantLock<T>;
     if !field_ptr.is_null() {
-        return Err(format!("field already set: {}", field.as_ref()).into());
+        return Err(jni::errors::Error::FieldAlreadySet(String::from(field.as_ref())));
     }
 
     let ptr = into_raw(rust_object);
@@ -162,6 +175,10 @@ fn inner_ptr<'a>(env: &JNIEnv<'a>, obj: JObject<'a>) -> JniResult<jlong> {
     Ok(env
         .get_field_unchecked(obj, field_id, JavaType::Primitive(Primitive::Long))?
         .j()?)
+}
+
+pub fn set_inner<'a, T>(env: &JNIEnv<'a>, obj: JObject<'a>, rust_object: T) -> JniResult<()> {
+    set_field(env, obj, INNER_PTR_FIELD, rust_object)
 }
 
 /// A port of `JNIEnv::take_rust_field` with type `T` modified to not require `Send`.
@@ -200,13 +217,6 @@ pub fn take_field<'a, O, S, T>(env: &JNIEnv<'a>, obj: O, field: S) -> JniResult<
     };
 
     Ok(mbox.mutex.into_inner().unwrap())
-}
-
-pub fn set_inner<'a, O, S, T>(env: &JNIEnv<'a>, obj: JObject<'a>, rust_object: T) -> JniResult<()>
-    where
-        T: 'static,
-{
-    set_field(env, obj, INNER_PTR_FIELD, rust_object)
 }
 
 pub fn get_inner<'a, T>(env: &JNIEnv<'a>, obj: JObject<'a>) -> JniResult<ReentrantReference<'a, T>>

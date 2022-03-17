@@ -1,10 +1,9 @@
-
-
+#![feature(thread_id_value)]
 mod interop;
 
 use std::fs::File;
+use std::io::Read;
 use std::path::Path;
-use std::sync::MutexGuard;
 
 use jni::JNIEnv;
 use jni::objects::{JClass, JObject, JString};
@@ -12,13 +11,9 @@ use jni::sys::{jboolean, jbyte, jbyteArray, jint, jlong, jobject, jsize, jstring
 use zip::read::ZipFile;
 use zip::result::{ZipError, ZipResult};
 use zip::ZipArchive;
+use crate::interop::{get_inner, set_inner, take_inner};
 
-fn jni_underlying<'a, T : Send>(env: &'a JNIEnv, class: &'a JClass) -> T {
-    let a: T = env.get_rust_field(class, "ptr").unwrap();
-    1
-}
-
-fn make_zip_entry<'a>(env: &JNIEnv, zip_result: ZipResult<ZipFile>) -> JObject<'a> {
+fn make_zip_entry<'a>(env: &JNIEnv<'a>, zip_result: ZipResult<ZipFile<'a>>) -> JObject<'a> {
     let file = match zip_result {
         Ok(file) => file,
         Err(ZipError::FileNotFound) => {
@@ -26,15 +21,15 @@ fn make_zip_entry<'a>(env: &JNIEnv, zip_result: ZipResult<ZipFile>) -> JObject<'
         }
         Err(e) => {
             env.throw(format!("Failed to open zip entry! {:?}", e)).unwrap();
-            unreachable!() // TODO: remove this later
+            return JObject::null().into();
         }
     };
 
-    let zip_entry_class = env.get_object_class("com/github/diamondminer88/zip/ZipEntry").unwrap();
-    let constructor = env.get_method_id(zip_entry_class, "<init>", "").unwrap();
+    let zip_entry_class = env.find_class("com/github/diamondminer88/zip/ZipEntry").unwrap();
+    let constructor = env.get_method_id(zip_entry_class, "<init>", "()V").unwrap();
 
     let zip_entry = env.new_object_unchecked(zip_entry_class, constructor, &[]).unwrap();
-    env.set_rust_field(zip_entry, "ptr", file);
+    set_inner(&env, zip_entry, file).unwrap();
     zip_entry
 }
 
@@ -50,7 +45,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_open(
     let file = File::open(Path::new(&path)).unwrap();
     let zip = ZipArchive::new(file).unwrap();
 
-    env.set_rust_field(class, "ptr", zip).unwrap();
+    set_inner(&env, class.into(), zip).unwrap();
 }
 
 #[no_mangle]
@@ -58,7 +53,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_close(
     env: JNIEnv,
     class: JClass,
 ) {
-    env.take_rust_field(class, "ptr").unwrap();
+    take_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
 }
 
 #[no_mangle]
@@ -66,11 +61,11 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__I
     env: JNIEnv,
     class: JClass,
     index: jint,
-) {
-    let mut zip = jni_underlying::<ZipArchive<File>>(&env, &class);
+) -> jobject {
+    let mut zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
     let result = zip.by_index(index as usize);
 
-    make_zip_entry(&env, result).into()
+    make_zip_entry(&env, result).into_inner()
 }
 
 #[no_mangle]
@@ -81,10 +76,10 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__L
 ) -> jobject {
     let path: String = env.get_string(jstr_path).unwrap().into();
 
-    let mut zip = jni_underlying::<ZipArchive<File>>(&env, &class);
+    let mut zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
     let result = zip.by_name(path.as_str());
 
-    make_zip_entry(&env, result).into()
+    make_zip_entry(&env, result).into_inner()
 }
 
 #[no_mangle]
@@ -92,11 +87,11 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntryRaw
     env: JNIEnv,
     class: JClass,
     index: jint,
-) {
-    let mut zip = jni_underlying::<ZipArchive<File>>(&env, &class);
+) -> jobject {
+    let mut zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
     let result = zip.by_index_raw(index as usize);
 
-    make_zip_entry(&env, result).into()
+    make_zip_entry(&env, result).into_inner()
 }
 
 #[no_mangle]
@@ -104,7 +99,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getEntryCoun
     env: JNIEnv,
     class: JClass,
 ) -> jlong {
-    let zip = jni_underlying::<ZipArchive<File>>(&env, &class);
+    let zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
     zip.len() as i64
 }
 
@@ -116,8 +111,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getName(
     env: JNIEnv,
     class: JClass,
 ) -> jstring {
-    let zip = jni_underlying::<ZipFile>(&env, &class);
-    env.new_string(zip.name()).unwrap().into()
+    let file = get_inner::<ZipFile>(&env, class.into()).unwrap();
+    env.new_string(file.name()).unwrap().into_inner()
 }
 
 #[no_mangle]
@@ -125,8 +120,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getComment(
     env: JNIEnv,
     class: JClass,
 ) -> jstring {
-    let zip = jni_underlying::<ZipFile>(&env, &class);
-    env.new_string(zip.comment()).unwrap().into()
+    let zip = get_inner::<ZipFile>(&env, class.into()).unwrap();
+    env.new_string(zip.comment()).unwrap().into_inner()
 }
 
 #[no_mangle]
@@ -134,7 +129,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_isDir(
     env: JNIEnv,
     class: JClass,
 ) -> jboolean {
-    let zip = jni_underlying::<ZipFile>(&env, &class);
+    let zip = get_inner::<ZipFile>(&env, class.into()).unwrap();
     zip.is_dir().into()
 }
 
@@ -143,8 +138,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getMode(
     env: JNIEnv,
     class: JClass,
 ) -> jint {
-    let zip = jni_underlying::<ZipFile>(&env, &class);
-    zip.unix_mode() as i32
+    let zip = get_inner::<ZipFile>(&env, class.into()).unwrap();
+    zip.unix_mode().unwrap_or(0) as i32
 }
 
 #[no_mangle]
@@ -152,7 +147,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getCRC32(
     env: JNIEnv,
     class: JClass,
 ) -> jint {
-    let zip = jni_underlying::<ZipFile>(&env, &class);
+    let zip = get_inner::<ZipFile>(&env, class.into()).unwrap();
     zip.crc32() as i32
 }
 
@@ -161,9 +156,9 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getExtraData(
     env: JNIEnv,
     class: JClass,
 ) -> jbyteArray {
-    let zip = jni_underlying::<ZipFile>(&env, &class);
+    let zip = get_inner::<ZipFile>(&env, class.into()).unwrap();
     let byte_array = env.new_byte_array(zip.extra_data().len() as jsize).unwrap();
-    env.set_byte_array_region(byte_array, 0, zip.extra_data() as &[jbyte]);
+    // env.set_byte_array_region(byte_array, 0, zip.extra_data() as &[jbyte]);
     byte_array
 }
 
@@ -172,7 +167,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getSize(
     env: JNIEnv,
     class: JClass,
 ) -> jlong {
-    let zip = jni_underlying::<ZipFile>(&env, &class);
+    let zip = get_inner::<ZipFile>(&env, class.into()).unwrap();
     zip.size() as i64
 }
 
@@ -181,33 +176,26 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getCompressed
     env: JNIEnv,
     class: JClass,
 ) -> jlong {
-    let zip = jni_underlying::<ZipFile>(&env, &class);
+    let zip = get_inner::<ZipFile>(&env, class.into()).unwrap();
     zip.compressed_size() as i64
 }
 
+#[no_mangle]
+pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_readEntry(
+    env: JNIEnv,
+    class: JClass,
+) -> jbyteArray {
+    let mut zip = get_inner::<ZipFile>(&env, class.into()).unwrap();
 
-
-// Utility functions
-/// A port of `JNIEnv::get_rust_field` with type `T` modified to not require `Send`.
-
-
-fn get_field<'a, O, S, T>(
-    env: &JNIEnv<'a>,
-    obj: O,
-    field: S,
-) -> JniResult<ReentrantReference<'a, T>>
-    where
-        O: Into<JObject<'a>>,
-        S: Into<JNIString>,
-        T: 'static,
-{
-    let obj = obj.into();
-    let _guard = env.lock_obj(obj)?;
-
-    let ptr = env.get_field(obj, field, "J")?.j()? as *mut ReentrantLock<T>;
-    non_null!(ptr, "rust value from Java");
-    unsafe {
-        // dereferencing is safe, because we checked it for null
-        Ok((*ptr).lock().unwrap())
+    if zip.is_dir() {
+        env.throw("Cannot read data from a dir entry!").unwrap();
+        return JObject::null().into_inner();
     }
+
+    let mut data = Vec::new();
+    zip.read_to_end(&mut data).unwrap();
+
+    let byte_array = env.new_byte_array(data.len() as jsize).unwrap();
+    env.set_byte_array_region(byte_array, 0, data.as_slice() as &[jbyte]);
+    byte_array
 }

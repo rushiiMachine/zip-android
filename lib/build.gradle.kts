@@ -33,6 +33,15 @@ cargo {
 }
 
 tasks.whenTaskAdded {
-    if (listOf("javaPreCompileDebug", "javaPreCompileRelease").contains(this.name))
+    if (listOf("mergeDebugJniLibFolders", "mergeReleaseJniLibFolders").contains(this.name))
         dependsOn("cargoBuild")
+}
+
+repositories {
+    mavenCentral()
+    google()
+}
+
+dependencies {
+    compileOnly("org.jetbrains:annotations:23.0.0")
 }

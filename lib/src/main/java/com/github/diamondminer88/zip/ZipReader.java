@@ -1,5 +1,7 @@
 package com.github.diamondminer88.zip;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.util.Iterator;
 
@@ -10,7 +12,7 @@ public class ZipReader {
     }
 
     @SuppressWarnings("FieldMayBeFinal")
-    private long ptr = 0;
+    private long innerPtr = 0;
 
     /**
      * Open a zip file with readonly operations
@@ -29,12 +31,12 @@ public class ZipReader {
     }
 
     /**
-     * Opens an archive and sets {@link ZipReader#ptr} to the struct
+     * Opens an archive and sets {@link ZipReader#innerPtr} to the struct
      */
     private native void open(String path);
 
     /**
-     * Destructs the ZipArchive at {@link ZipReader#ptr}
+     * Destructs the ZipArchive at {@link ZipReader#innerPtr}
      * This MUST be called otherwise you can have a memory leak.
      */
     public native void close();
@@ -43,18 +45,21 @@ public class ZipReader {
      * Get a contained file by index. Returns null if entry not found.
      * @param index Index of the file.
      */
+    @NotNull
     public native ZipEntry openEntry(int index);
 
     /**
      * Search for a file entry by name. Returns null if entry not found.
      * @param path Path to the file inside the archive.
      */
+    @NotNull
     public native ZipEntry openEntry(String path);
 
     /**
      * Get a contained file by index without decompressing it.
      * @param index Index of the file.
      */
+    @NotNull
     public native ZipEntry openEntryRaw(int index);
 
     /**
@@ -65,12 +70,12 @@ public class ZipReader {
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
-        if (ptr != 0) close();
+        close();
     }
 
     class ZipEntryNameIterator implements Iterator<String> {
         @SuppressWarnings("FieldMayBeFinal")
-        private long ptr = 0;
+        private long innerPtr = 0;
 
         @Override
         public native boolean hasNext();

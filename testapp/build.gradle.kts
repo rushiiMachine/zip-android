@@ -3,11 +3,16 @@ plugins {
     id("kotlin-android")
 }
 
+repositories {
+    google()
+    mavenCentral()
+}
+
 android {
     compileSdk = 31
 
     defaultConfig {
-        applicationId = "com.github.diamondminer88.testapp"
+        applicationId = "com.github.diamondminer88.zip.testapp"
         minSdk = 24
         targetSdk = 29
         versionCode = 1
@@ -31,8 +36,8 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.7.0")
-    implementation("androidx.appcompat:appcompat:1.3.1")
-    implementation("com.google.android.material:material:1.4.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.2")
+    implementation("androidx.appcompat:appcompat:1.4.1")
+    implementation("com.google.android.material:material:1.5.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.3")
     implementation(project(":lib"))
 }

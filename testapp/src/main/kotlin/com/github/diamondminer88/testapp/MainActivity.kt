@@ -1,71 +1,49 @@
 package com.github.diamondminer88.testapp
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.github.diamondminer88.zip.Zip
+import com.github.diamondminer88.zip.ZipEntry
+import com.github.diamondminer88.zip.ZipReader
 import java.io.File
+
+const val TAG = "zip-android-testapp"
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        requestPermissions()
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+            return requestPermissions()
 
-        val lib = Zip()
-        val basePath = Environment.getExternalStorageDirectory().absolutePath + "/DexAccessModifier"
+        val baseDir = File(Environment.getExternalStorageDirectory(), "/zip-android")
+        val zipFile = File(baseDir, "testzip.zip")
+        baseDir.mkdir()
+        zipFile.createNewFile()
+        zipFile.writeBytes(resources.openRawResource(R.raw.testzip).readBytes())
 
-        val list = findViewById<LinearLayout>(R.id.list)
-        File(basePath).listFiles()
-            ?.filter { it.extension == "dex" }
-            ?.filterNot { it.nameWithoutExtension.endsWith("_modified") }
-            ?.forEach { f ->
-                list.addView(Button(baseContext).apply {
-                    layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
-                    text = f.name
-                    setOnClickListener {
-                        Thread {
-                            Log.i("DexAccessModifier", "Starting...")
-                            try {
-                                lib.run(
-                                    f.absolutePath,
-                                    "$basePath/${f.nameWithoutExtension}_modified.dex",
-                                    arrayOf("Landroid", "Lcom/discord/app/App;")
-                                )
-                            } catch (t: Throwable) {
-                                t.printStackTrace()
-                                Handler(Looper.getMainLooper()).post {
-                                    Toast.makeText(context, t.message, Toast.LENGTH_LONG)
-                                        .show()
-                                }
-                            }
-                            Log.i("DexAccessModifier", "Finished...")
-                        }.start()
-                    }
-                })
-            }
+        val zip = ZipReader(zipFile)
+        Log.i(TAG, "zip entries: ${zip.entryCount}")
+
+        val entry = zip.openEntry("abc.txt")
+        Log.i(TAG, "entry name: ${entry.name} size: ${entry.size} content:")
     }
 
     private fun requestPermissions() {
-        val REQUEST_EXTERNAL_STORAGE = 1
-        val PERMISSIONS_STORAGE = arrayOf(
+        val requestId = 1
+        val storagePerms = arrayOf(
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
         ActivityCompat.requestPermissions(
             this,
-            PERMISSIONS_STORAGE,
-            REQUEST_EXTERNAL_STORAGE
+            storagePerms,
+            requestId
         )
     }
 }

@@ -1,8 +1,11 @@
 package com.github.diamondminer88.zip;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 @SuppressWarnings("unused")
 public class ZipEntry {
-    private final long ptr = 0;
+    private final long innerPtr = 0;
 
     /**
      * Called by JNI.
@@ -17,12 +20,14 @@ public class ZipEntry {
      * It may contain an absolute path (/etc/shadow), or break out of the current directory (../runtime).
      * Carelessly writing to these paths allows an attacker to craft a ZIP archive that will overwrite critical files.
      */
-    private native String getName();
+    @NotNull
+    public native String getName();
 
     /**
      * Get the comment of the file
      */
-    private native String getComment();
+    @NotNull
+    public native String getComment();
 
 //    /**
 //     * Get the time the file was last modified.
@@ -33,31 +38,36 @@ public class ZipEntry {
     /**
      * Returns whether the file is a directory.
      */
-    private native long isDir();
+    public native long isDir();
 
     /**
      * Get the unix mode for this file.
-     * Nullable.
      */
-    private native Long getMode();
+    @Nullable
+    public native Long getMode();
 
     /**
      * Get the CRC32 hash of the original file.
      */
-    private native int getCRC32();
+    public native int getCRC32();
 
     /**
      * Get the extra data of the zip header for this file.
      */
-    private native byte[] getExtraData();
+    public native byte[] getExtraData();
 
     /**
      * Get the size of the file (bytes) when uncompressed.
      */
-    private native long getSize();
+    public native long getSize();
 
     /**
      * Get the size of the file (in bytes) in the archive.
      */
-    private native long getCompressedSize();
+    public native long getCompressedSize();
+
+    /**
+     * Reads this file entry's data (decompressed or not depending on how this entry was opened)
+     */
+    public native byte[] readEntry();
 }

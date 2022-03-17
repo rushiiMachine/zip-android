@@ -1,4 +1,3 @@
 <resources>
-    <string name="app_name">DexAccessModifier</string>
-    <string name="title">Drop dex files into /DexAccessModifier/\nand they\'ll show up after a restart</string>
+    <string name="app_name">zip-android</string>
 </resources>
