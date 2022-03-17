@@ -1,4 +1,5 @@
 #![feature(thread_id_value)]
+
 mod interop;
 
 use std::fs::File;
@@ -195,7 +196,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_readEntry(
     let mut data = Vec::new();
     zip.read_to_end(&mut data).unwrap();
 
+    let jbyte_data = unsafe { std::slice::from_raw_parts(data.as_ptr() as *const jbyte, data.len()) };
     let byte_array = env.new_byte_array(data.len() as jsize).unwrap();
-    env.set_byte_array_region(byte_array, 0, data.as_slice() as &[jbyte]);
+    env.set_byte_array_region(byte_array, 0, jbyte_data).unwrap();
     byte_array
 }
