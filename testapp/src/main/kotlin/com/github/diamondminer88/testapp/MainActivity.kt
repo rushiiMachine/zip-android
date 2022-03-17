@@ -31,7 +31,8 @@ class MainActivity : AppCompatActivity() {
         Log.i(TAG, "zip entries: ${zip.entryCount}")
 
         val entry = zip.openEntry("abc.txt")
-        Log.i(TAG, "entry name: ${entry.name} size: ${entry.size} content:")
+            ?: throw Error("Failed to open entry")
+        Log.i(TAG, "entry name: ${entry.name} size: ${entry.size} content: ${entry.readEntry().decodeToString()}")
     }
 
     private fun requestPermissions() {

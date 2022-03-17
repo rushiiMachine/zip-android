@@ -1,6 +1,7 @@
 package com.github.diamondminer88.zip;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.Iterator;
@@ -45,21 +46,21 @@ public class ZipReader {
      * Get a contained file by index. Returns null if entry not found.
      * @param index Index of the file.
      */
-    @NotNull
+    @Nullable
     public native ZipEntry openEntry(int index);
 
     /**
      * Search for a file entry by name. Returns null if entry not found.
      * @param path Path to the file inside the archive.
      */
-    @NotNull
+    @Nullable
     public native ZipEntry openEntry(String path);
 
     /**
      * Get a contained file by index without decompressing it.
      * @param index Index of the file.
      */
-    @NotNull
+    @Nullable
     public native ZipEntry openEntryRaw(int index);
 
     /**
