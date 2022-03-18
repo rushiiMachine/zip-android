@@ -2,7 +2,6 @@
 
 use std::fs::File;
 use std::io::Read;
-use std::ops::Deref;
 use std::path::Path;
 
 use jni::JNIEnv;
@@ -101,9 +100,9 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntryRaw
 pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getEntryCount(
     env: JNIEnv,
     class: JClass,
-) -> jlong {
+) -> jint {
     let zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
-    zip.len() as i64
+    zip.len() as jint
 }
 
 #[no_mangle]

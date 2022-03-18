@@ -38,7 +38,7 @@ public class ZipEntry {
     /**
      * Returns whether the file is a directory.
      */
-    public native long isDir();
+    public native boolean isDir();
 
     /**
      * Get the unix mode for this file.
