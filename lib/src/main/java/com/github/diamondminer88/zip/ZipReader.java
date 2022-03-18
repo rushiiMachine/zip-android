@@ -5,9 +5,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
 import java.io.File;
+import java.util.Iterator;
+import java.util.Objects;
 
 @SuppressWarnings("unused")
-public class ZipReader implements Closeable {
+public class ZipReader implements Closeable, Iterable<ZipEntry> {
     static {
         System.loadLibrary("ziprs");
     }
@@ -32,12 +34,12 @@ public class ZipReader implements Closeable {
     }
 
     /**
-     * Opens an archive and sets {@link ZipReader#innerPtr} to the struct
+     * Opens an archive and sets {@link ZipReader#innerPtr} to the native data.
      */
     private native void open(String path);
 
     /**
-     * Destructs the ZipArchive at {@link ZipReader#innerPtr}
+     * Destructs the underlying native ZipArchive at {@link ZipReader#innerPtr}
      * This MUST be called otherwise you can have a memory leak.
      */
     @Override
@@ -67,11 +69,36 @@ public class ZipReader implements Closeable {
     /**
      * Number of files contained in this archive.
      */
-    public native long getEntryCount();
+    public native int getEntryCount();
 
     /**
      * Gets all the entry names (including dirs) in this archive.
+     * This does <b>NOT</b> preserve entry index order.
+     * Use this instead of
      */
     @NotNull
     public native String[] getEntryNames();
+
+    /**
+     * Get an iterator for all the entries contained in this archive.
+     */
+    @NotNull
+    @Override
+    public Iterator<ZipEntry> iterator() {
+        return new Iterator<>() {
+            private final int totalEntries = getEntryCount();
+            int cursor = 0;
+
+            @Override
+            public boolean hasNext() {
+                return cursor != totalEntries;
+            }
+
+            @NotNull
+            @Override
+            public ZipEntry next() {
+                return Objects.requireNonNull(openEntry(cursor++));
+            }
+        };
+    }
 }
