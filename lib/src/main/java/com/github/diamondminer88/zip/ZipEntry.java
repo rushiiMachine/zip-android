@@ -29,11 +29,13 @@ public class ZipEntry {
     @NotNull
     public native String getComment();
 
-//    /**
-//     * Get the time the file was last modified.
-//     * @return UNIX time
-//     */
-//    private native long getLastModified();
+    /**
+     * Get the time the file was last modified.
+     * Note that zip files do not store timezone information, effectively rendering it useless for accurate information.
+     * This timestamp will be relative to the original author's timezone.
+     * @return UNIX timestamp (possibly UTC)
+     */
+    public native long getLastModified();
 
     /**
      * Returns whether the file is a directory.

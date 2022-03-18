@@ -1,7 +1,9 @@
 use std::io::Read;
 
 use jni::JNIEnv;
-use jni::objects::{JClass, JObject};
+use jni::objects::{JClass, JObject, JValue};
+use jni::signature::JavaType;
+use jni::signature::Primitive::Long;
 use jni::sys::{jboolean, jbyteArray, jint, jlong, jsize, jstring};
 use zip::read::ZipFile;
 
@@ -24,6 +26,34 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getComment(
 ) -> jstring {
     let zip = get_inner::<ZipFile>(&env, class.into()).unwrap();
     env.new_string(zip.comment()).unwrap().into_inner()
+}
+
+#[no_mangle]
+pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getLastModified(
+    env: JNIEnv,
+    class: JClass,
+) -> jlong {
+    let modified = get_inner::<ZipFile>(&env, class.into()).unwrap().last_modified();
+    let args: Vec<JValue> = vec![
+        (modified.year() - 1900).into(),
+        (modified.month() - 1).into(),
+        modified.day().into(),
+        modified.hour().into(),
+        (modified.minute() - 1).into(),
+        (modified.second() - 1).into(),
+    ];
+
+    // Yes I could do this natively, however im not adding in chrono just for this
+    let date_class = env.find_class("java/util/Date").unwrap();
+    let utc_method = env.get_static_method_id(date_class, "UTC", "(IIIIII)J").unwrap();
+    let unix_time = env.call_static_method_unchecked(
+        date_class,
+        utc_method,
+        JavaType::Primitive(Long),
+        &args,
+    ).unwrap();
+
+    unix_time.j().unwrap()
 }
 
 #[no_mangle]

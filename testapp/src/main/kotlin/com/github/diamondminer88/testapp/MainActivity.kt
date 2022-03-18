@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
             Log.i(TAG, "Entries: ${zip.entryCount} Names: ${zip.entryNames.joinToString()}")
 
             zip.forEach {
-                Log.i(TAG, "Entry: ${it.name} size: ${it.size}")
+                Log.i(TAG, "Entry: ${it.name} size: ${it.size} modified: ${it.lastModified}")
                 if (!it.isDir) {
                     Log.i(TAG, "Content: ${it.readEntry().decodeToString()}")
                 }
