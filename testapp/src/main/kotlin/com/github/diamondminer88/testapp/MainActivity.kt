@@ -10,7 +10,7 @@ import androidx.core.app.ActivityCompat
 import com.github.diamondminer88.zip.ZipReader
 import java.io.File
 
-const val TAG = "zip-android-testapp"
+const val TAG = "zip-android"
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

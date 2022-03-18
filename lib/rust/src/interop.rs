@@ -232,14 +232,3 @@ pub fn take_inner<'a, T>(env: &JNIEnv<'a>, obj: JObject<'a>) -> JniResult<T>
 {
     take_field(env, obj, INNER_PTR_FIELD)
 }
-
-pub fn dispose_inner<'a, T>(env: &JNIEnv<'a>, obj: JObject<'a>) -> JniResult<()>
-    where
-        T: 'static,
-{
-    if inner_ptr(env, obj)? == 0 {
-        return Ok(());
-    }
-    take_field::<_, _, T>(env, obj, INNER_PTR_FIELD)?;
-    Ok(())
-}
