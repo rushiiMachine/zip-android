@@ -1,10 +1,10 @@
 package com.github.diamondminer88.zip;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
 import java.io.File;
-import java.util.Iterator;
 
 @SuppressWarnings("unused")
 public class ZipReader implements Closeable {
@@ -65,18 +65,13 @@ public class ZipReader implements Closeable {
     public native ZipEntry openEntryRaw(int index);
 
     /**
-     * Number of files contained in this zip.
+     * Number of files contained in this archive.
      */
     public native long getEntryCount();
 
-    class ZipEntryNameIterator implements Iterator<String> {
-        @SuppressWarnings("FieldMayBeFinal")
-        private long innerPtr = 0;
-
-        @Override
-        public native boolean hasNext();
-
-        @Override
-        public native String next();
-    }
+    /**
+     * Gets all the entry names (including dirs) in this archive.
+     */
+    @NotNull
+    public native String[] getEntryNames();
 }

@@ -27,11 +27,12 @@ class MainActivity : AppCompatActivity() {
         zipFile.writeBytes(resources.openRawResource(R.raw.testzip).readBytes())
 
         ZipReader(zipFile).use {
-            Log.i(TAG, "zip entries: ${it.entryCount}")
+            Log.i(TAG, "Entries: ${it.entryNames.joinToString()}")
 
             val entry = it.openEntry("abc.txt")
                 ?: throw Error("Failed to open entry")
-            Log.i(TAG, "entry name: ${entry.name} size: ${entry.size} content: ${entry.readEntry().decodeToString()}")
+            Log.i(TAG, "Entry name: ${entry.name} size: ${entry.size} content: ${entry.readEntry().decodeToString()}")
+
         }
     }
 

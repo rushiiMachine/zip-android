@@ -1,18 +1,20 @@
 #![feature(thread_id_value)]
 
-mod interop;
-
 use std::fs::File;
 use std::io::Read;
+use std::ops::Deref;
 use std::path::Path;
 
 use jni::JNIEnv;
 use jni::objects::{JClass, JObject, JString};
-use jni::sys::{jboolean, jbyte, jbyteArray, jint, jlong, jobject, jsize, jstring};
+use jni::sys::{jboolean, jbyte, jbyteArray, jint, jlong, jobject, jobjectArray, jsize, jstring};
 use zip::read::ZipFile;
 use zip::result::{ZipError, ZipResult};
 use zip::ZipArchive;
+
 use crate::interop::{get_inner, set_inner, take_inner};
+
+mod interop;
 
 fn make_zip_entry<'a>(env: &JNIEnv<'a>, zip_result: ZipResult<ZipFile<'a>>) -> JObject<'a> {
     let file = match zip_result {
@@ -104,6 +106,27 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getEntryCoun
     zip.len() as i64
 }
 
+#[no_mangle]
+pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getEntryNames(
+    env: JNIEnv,
+    class: JClass,
+) -> jobjectArray {
+    let zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
+    let names_length = zip.file_names().collect::<Vec<&str>>().len();
+
+    let array = env.new_object_array(
+        names_length as jsize,
+        env.find_class("java/lang/String").unwrap(),
+        JObject::null(),
+    ).unwrap();
+
+    for (i, name) in zip.file_names().enumerate() {
+        let jvm_name = env.new_string(name).unwrap();
+        env.set_object_array_element(array, i as jsize, jvm_name).unwrap();
+    }
+
+    array
+}
 
 // ----------JNI ZipEntry----------
 
