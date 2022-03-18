@@ -37,9 +37,15 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_open(
     jstr_path: JString,
 ) {
     let path: String = env.get_string(jstr_path).unwrap().into();
-    let file = File::open(Path::new(&path)).unwrap();
-    let zip = ZipArchive::new(file).unwrap();
+    let file = match File::open(Path::new(&path)) {
+        Ok(file) => file,
+        Err(e) => {
+            env.throw(format!("Failed to open file: {:?}", e)).unwrap();
+            return;
+        }
+    };
 
+    let zip = ZipArchive::new(file).unwrap();
     set_inner(&env, class.into(), zip).unwrap();
 }
 
