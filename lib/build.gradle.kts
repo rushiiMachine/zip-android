@@ -62,5 +62,20 @@ afterEvaluate {
                 artifact(tasks["sourcesJar"])
             }
         }
+
+        repositories {
+            val username = System.getenv("MAVEN_USERNAME")
+            val password = System.getenv("MAVEN_PASSWORD")
+
+            if (username == null || password == null)
+                mavenLocal()
+            else maven {
+                credentials {
+                    this.username = username
+                    this.password = password
+                }
+                setUrl("https://redditvanced.ddns.net/maven/releases")
+            }
+        }
     }
 }
