@@ -1,8 +1,10 @@
+group = "com.github.diamondminer88"
 version = "1.0.0"
 
 plugins {
     id("com.android.library")
     id("org.mozilla.rust-android-gradle.rust-android")
+    id("maven-publish")
 }
 
 android {
@@ -43,4 +45,22 @@ repositories {
 
 dependencies {
     compileOnly("org.jetbrains:annotations:23.0.0")
+}
+
+task<Jar>("sourcesJar") {
+    from(android.sourceSets.named("main").get().java.srcDirs)
+    archiveClassifier.set("sources")
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            register("zip-android", MavenPublication::class) {
+                artifactId = "zip-android"
+                artifact(tasks["bundleLibCompileToJarRelease"].outputs.files.singleFile)
+                artifact(tasks["bundleReleaseAar"])
+                artifact(tasks["sourcesJar"])
+            }
+        }
+    }
 }
