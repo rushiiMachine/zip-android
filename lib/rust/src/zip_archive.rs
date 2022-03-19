@@ -8,6 +8,7 @@ use jni::{
     objects::{JClass, JObject, JString},
     sys::{jint, jobject, jobjectArray, jsize},
 };
+use jni::sys::jbyteArray;
 use zip::{
     read::ZipFile,
     result::{ZipError, ZipResult},
@@ -111,6 +112,15 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getEntryCoun
 ) -> jint {
     let zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
     zip.len() as jint
+}
+
+#[no_mangle]
+pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getRawComment(
+    env: JNIEnv,
+    class: JClass,
+) -> jbyteArray {
+    let zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
+    env.byte_array_from_slice(zip.comment()).unwrap()
 }
 
 #[no_mangle]

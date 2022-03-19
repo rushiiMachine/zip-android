@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Objects;
 
@@ -78,6 +79,19 @@ public class ZipReader implements Closeable, Iterable<ZipEntry> {
      */
     @NotNull
     public native String[] getEntryNames();
+
+    /**
+     * Gets the raw comment on this archive.
+     */
+    public native byte[] getRawComment();
+
+    /**
+     * Gets the comment on this archive.
+     * @return String decoded as UTF-8
+     */
+    public String getComment() {
+        return new String(getRawComment(), StandardCharsets.UTF_8);
+    }
 
     /**
      * Get an iterator for all the entries contained in this archive.

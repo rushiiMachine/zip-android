@@ -5,7 +5,7 @@ use jni::{
     objects::{JClass, JObject, JValue},
     signature::JavaType,
     signature::Primitive::Long,
-    sys::{jboolean, jbyteArray, jint, jlong, jsize, jstring},
+    sys::{jboolean, jbyteArray, jint, jlong, jstring},
 };
 use zip::read::ZipFile;
 
