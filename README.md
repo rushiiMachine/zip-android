@@ -6,15 +6,15 @@ Java Android bindings for [zip-rs](https://github.com/zip-rs/zip), a native rust
 
 ```kotlin
 repositories {
-    maven("https://jitpack.io")
+    maven("https://redditvanced.ddns.net/maven")
 }
 
 dependencies {
-    implementation("com.github.DiamondMiner88:zip-android:master-SNAPSHOT")
+    implementation("com.github.diamondminer88:zip-android:1.0.0")
 }
 ```
 
-### Usage
+### Usage (Kotlin)
 
 ```kotlin
 ZipReader(zipFile).use { zip ->
@@ -27,5 +27,10 @@ ZipReader(zipFile).use { zip ->
             "Content: ${it.readEntry().decodeToString()}"
         }
     }
+}
+
+ZipWriter(zipFile).use { zip ->
+    zip.setComment("a comment".toByteArray())
+    zip.writeEntry("test.txt", "hot garbage")
 }
 ```
