@@ -9,8 +9,10 @@ use jni::{
 };
 use zip::read::ZipFile;
 
-use crate::{bytes_to_jbytes, cache};
-use crate::interop::get_inner;
+use crate::{
+    cache,
+    interop::get_inner,
+};
 
 #[no_mangle]
 pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getName(
@@ -90,11 +92,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getExtraData(
     class: JClass,
 ) -> jbyteArray {
     let entry = get_inner::<ZipFile>(&env, class.into()).unwrap();
-    let data = entry.extra_data();
-
-    let byte_array = env.new_byte_array(entry.extra_data().len() as jsize).unwrap();
-    env.set_byte_array_region(byte_array, 0, bytes_to_jbytes(&data)).unwrap();
-    byte_array
+    env.byte_array_from_slice(entry.extra_data()).unwrap()
 }
 
 #[no_mangle]
@@ -130,7 +128,5 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_readEntry(
     let mut data = Vec::new();
     entry.read_to_end(&mut data).unwrap();
 
-    let byte_array = env.new_byte_array(data.len() as jsize).unwrap();
-    env.set_byte_array_region(byte_array, 0, bytes_to_jbytes(&data)).unwrap();
-    byte_array
+    env.byte_array_from_slice(&data).unwrap()
 }
