@@ -46,7 +46,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getLastModifi
     ];
 
     // Yes I could do this natively, however I'm not adding chrono just for this
-    let gref_class = cache::class_date();
+    let gref_class = cache::cls_date();
     let unix_time = env.call_static_method_unchecked(
         JClass::from(gref_class.as_obj()),
         cache::method_date_utc(),

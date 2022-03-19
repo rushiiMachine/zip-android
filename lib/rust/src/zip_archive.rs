@@ -29,10 +29,10 @@ fn make_zip_entry<'a>(env: &JNIEnv<'a>, zip_result: ZipResult<ZipFile<'a>>) -> J
         }
     };
 
-    let gref_class = cache::class_zip_entry();
+    let gref_class = cache::cls_zipentry();
     let zip_entry = env.new_object_unchecked(
         JClass::from(gref_class.as_obj()),
-        cache::ctor_zip_entry(),
+        cache::ctor_zipentry(),
         &[],
     ).unwrap();
     set_inner(&env, zip_entry, file).unwrap();
@@ -121,7 +121,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getEntryName
     let zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
     let names_length = zip.file_names().collect::<Vec<&str>>().len();
 
-    let gref_class = cache::class_string();
+    let gref_class = cache::cls_string();
     let array = env.new_object_array(
         names_length as jsize,
         JClass::from(gref_class.as_obj()),

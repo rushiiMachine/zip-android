@@ -8,42 +8,51 @@ use jni::{
     sys::{jint, JNI_VERSION_1_6},
 };
 
-static mut CLASS_ZIP_ENTRY: Option<GlobalRef> = None;
-static mut CLASS_STRING: Option<GlobalRef> = None;
-static mut CLASS_DATE: Option<GlobalRef> = None;
-
-static mut CTOR_ZIP_ENTRY: Option<JMethodID> = None;
-static mut METHOD_DATE_UTC: Option<JStaticMethodID> = None;
-
-pub fn class_zip_entry() -> GlobalRef {
-    unsafe { CLASS_ZIP_ENTRY.clone().unwrap() }
+// If anyone wants to improve these, please do
+// Specifically inst_method + static_method could be merged into one
+// I barely know anything about rust macros
+macro_rules! class {
+    ($variable:ident, $getter:ident) => {
+        static mut $variable: Option<GlobalRef> = None;
+        pub fn $getter() -> GlobalRef {
+            unsafe { $variable.clone().unwrap() }
+        }
+    }
 }
 
-pub fn class_string() -> GlobalRef {
-    unsafe { CLASS_STRING.clone().unwrap() }
+macro_rules! inst_method {
+    ($variable:ident, $getter:ident) => {
+        static mut $variable: Option<JMethodID> = None;
+        pub fn $getter() -> JMethodID<'static> {
+            unsafe { $variable.unwrap() }
+        }
+    }
 }
 
-pub fn class_date() -> GlobalRef {
-    unsafe { CLASS_DATE.clone().unwrap() }
+macro_rules! static_method {
+    ($variable:ident, $getter:ident) => {
+        static mut $variable: Option<JStaticMethodID> = None;
+        pub fn $getter() -> JStaticMethodID<'static> {
+            unsafe { $variable.unwrap() }
+        }
+    }
 }
 
-pub fn ctor_zip_entry() -> JMethodID<'static> {
-    unsafe { CTOR_ZIP_ENTRY.unwrap() }
-}
-
-pub fn method_date_utc() -> JStaticMethodID<'static> {
-    unsafe { METHOD_DATE_UTC.unwrap() }
-}
+class!(CLS_ZIPENTRY, cls_zipentry);
+class!(CLS_STRING, cls_string);
+class!(CLS_DATE, cls_date);
+inst_method!(CTOR_ZIPENTRY, ctor_zipentry);
+static_method!(METHOD_DATE_UTC, method_date_utc);
 
 #[no_mangle]
 pub unsafe extern "system" fn JNI_OnLoad(vm: JavaVM, _reserved: c_void) -> jint {
     let env = vm.get_env().unwrap();
 
-    CLASS_ZIP_ENTRY = get_class(&env, "com/github/diamondminer88/zip/ZipEntry");
-    CLASS_STRING = get_class(&env, "java/lang/String");
-    CLASS_DATE = get_class(&env, "java/util/Date");
+    CLS_ZIPENTRY = get_class(&env, "com/github/diamondminer88/zip/ZipEntry");
+    CLS_STRING = get_class(&env, "java/lang/String");
+    CLS_DATE = get_class(&env, "java/util/Date");
 
-    CTOR_ZIP_ENTRY = get_method(
+    CTOR_ZIPENTRY = get_method(
         &env,
         "com/github/diamondminer88/zip/ZipEntry",
         "<init>",
