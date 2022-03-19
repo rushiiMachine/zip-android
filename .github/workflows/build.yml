@@ -52,11 +52,14 @@ jobs:
           cargo ndk --version || cargo install cargo-ndk
 
       - name: Build and Maven publish
+        env:
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
         run: |
           cd $GITHUB_WORKSPACE/src
           chmod +x gradlew
           mkdir -p $GITHUB_WORKSPACE/builds
-          ./gradlew lib:build publish --no-daemon
+          ./gradlew lib:build lib:publish --no-daemon
           mv -T lib/build/outputs/aar/lib-release.aar $GITHUB_WORKSPACE/builds/libziprs-release.aar
 
       - name: Set outputs
