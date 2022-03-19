@@ -1,14 +1,20 @@
+// Modified version of interop.rs from this:
 // https://github.com/kawamuray/wasmtime-java
 
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Mutex;
-use jni::descriptors::Desc;
-use jni::errors::{Result as JniResult};
-use jni::JNIEnv;
-use jni::objects::{JFieldID, JObject};
-use jni::signature::{JavaType, Primitive};
-use jni::strings::JNIString;
-use jni::sys::jlong;
+use std::{
+    sync::atomic::{AtomicU64, Ordering},
+    sync::Mutex,
+};
+
+use jni::{
+    descriptors::Desc,
+    errors::Result as JniResult,
+    JNIEnv,
+    objects::{JFieldID, JObject},
+    signature::{JavaType, Primitive},
+    strings::JNIString,
+    sys::jlong,
+};
 
 pub const INNER_PTR_FIELD: &str = "innerPtr";
 

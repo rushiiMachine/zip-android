@@ -1,13 +1,20 @@
-use std::fs::File;
-use std::path::Path;
+use std::{
+    fs::File,
+    path::Path,
+};
 
-use jni::JNIEnv;
-use jni::objects::{JClass, JObject, JString};
-use jni::sys::{jint, jobject, jobjectArray, jsize};
-use zip::read::ZipFile;
-use zip::result::{ZipError, ZipResult};
-use zip::ZipArchive;
+use jni::{
+    JNIEnv,
+    objects::{JClass, JObject, JString},
+    sys::{jint, jobject, jobjectArray, jsize},
+};
+use zip::{
+    read::ZipFile,
+    result::{ZipError, ZipResult},
+    ZipArchive,
+};
 
+use crate::cache;
 use crate::interop::{get_inner, set_inner, take_inner};
 
 fn make_zip_entry<'a>(env: &JNIEnv<'a>, zip_result: ZipResult<ZipFile<'a>>) -> JObject<'a> {
@@ -22,10 +29,12 @@ fn make_zip_entry<'a>(env: &JNIEnv<'a>, zip_result: ZipResult<ZipFile<'a>>) -> J
         }
     };
 
-    let zip_entry_class = env.find_class("com/github/diamondminer88/zip/ZipEntry").unwrap();
-    let constructor = env.get_method_id(zip_entry_class, "<init>", "()V").unwrap();
-
-    let zip_entry = env.new_object_unchecked(zip_entry_class, constructor, &[]).unwrap();
+    let gref_class = cache::class_zip_entry();
+    let zip_entry = env.new_object_unchecked(
+        JClass::from(gref_class.as_obj()),
+        cache::ctor_zip_entry(),
+        &[],
+    ).unwrap();
     set_inner(&env, zip_entry, file).unwrap();
     zip_entry
 }
@@ -112,9 +121,10 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getEntryName
     let zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
     let names_length = zip.file_names().collect::<Vec<&str>>().len();
 
+    let gref_class = cache::class_string();
     let array = env.new_object_array(
         names_length as jsize,
-        env.find_class("java/lang/String").unwrap(),
+        JClass::from(gref_class.as_obj()),
         JObject::null(),
     ).unwrap();
 

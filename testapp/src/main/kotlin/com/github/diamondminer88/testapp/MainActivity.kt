@@ -27,7 +27,8 @@ class MainActivity : AppCompatActivity() {
         zipFile.writeBytes(resources.openRawResource(R.raw.testzip).readBytes())
 
         ZipReader(zipFile).use { zip ->
-            Log.i(TAG, "Entries: ${zip.entryCount} Names: ${zip.entryNames.joinToString()}")
+            Log.i(TAG, "Entry count: ${zip.entryCount}")
+            Log.i(TAG, "Entries: ${zip.entryNames.joinToString()}")
 
             zip.forEach {
                 Log.i(TAG, "Entry: ${it.name} size: ${it.size} modified: ${it.lastModified}")

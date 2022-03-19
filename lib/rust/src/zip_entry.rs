@@ -1,13 +1,15 @@
 use std::io::Read;
 
-use jni::JNIEnv;
-use jni::objects::{JClass, JObject, JValue};
-use jni::signature::JavaType;
-use jni::signature::Primitive::Long;
-use jni::sys::{jboolean, jbyteArray, jint, jlong, jsize, jstring};
+use jni::{
+    JNIEnv,
+    objects::{JClass, JObject, JValue},
+    signature::JavaType,
+    signature::Primitive::Long,
+    sys::{jboolean, jbyteArray, jint, jlong, jsize, jstring},
+};
 use zip::read::ZipFile;
 
-use crate::bytes_to_jbytes;
+use crate::{bytes_to_jbytes, cache};
 use crate::interop::get_inner;
 
 #[no_mangle]
@@ -43,12 +45,11 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getLastModifi
         (modified.second() - 1).into(),
     ];
 
-    // Yes I could do this natively, however im not adding in chrono just for this
-    let date_class = env.find_class("java/util/Date").unwrap();
-    let utc_method = env.get_static_method_id(date_class, "UTC", "(IIIIII)J").unwrap();
+    // Yes I could do this natively, however I'm not adding chrono just for this
+    let gref_class = cache::class_date();
     let unix_time = env.call_static_method_unchecked(
-        date_class,
-        utc_method,
+        JClass::from(gref_class.as_obj()),
+        cache::method_date_utc(),
         JavaType::Primitive(Long),
         &args,
     ).unwrap();
