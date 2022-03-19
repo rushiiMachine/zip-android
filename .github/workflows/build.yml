@@ -37,19 +37,21 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             $GITHUB_WORKSPACE/src/lib/rust/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('src/lib/rust/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('lib/rust/Cargo.lock') }}
 
       - name: Setup Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
+          profile: minimal
+          default: true
 
       - name: Setup Rust Environment
         run: |
           rustup target add aarch64-linux-android armv7-linux-androideabi
           cargo ndk --version || cargo install cargo-ndk
 
-      - name: Build
+      - name: Build and Maven publish
         run: |
           cd $GITHUB_WORKSPACE/src
           chmod +x gradlew
