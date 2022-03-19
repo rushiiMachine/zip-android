@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.github.diamondminer88.zip.ZipReader
+import com.github.diamondminer88.zip.ZipWriter
 import java.io.File
 
 const val TAG = "zip-android"
@@ -36,6 +37,16 @@ class MainActivity : AppCompatActivity() {
                     Log.i(TAG, "Content: ${it.readEntry().decodeToString()}")
                 }
             }
+        }
+
+        ZipWriter(zipFile).use { zip ->
+            zip.setComment("a comment".toByteArray())
+            zip.writeEntry("test.txt", "hot garbage")
+        }
+
+        ZipReader(zipFile).use { zip ->
+            Log.i(TAG, "Modified zip comment: ${zip.comment}")
+            Log.i(TAG, "Created entry content: ${zip.openEntry("test.txt")?.readEntry()?.decodeToString()}")
         }
     }
 
