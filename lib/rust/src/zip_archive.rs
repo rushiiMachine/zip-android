@@ -30,6 +30,10 @@ fn set_entry<'a>(env: &JNIEnv<'a>, obj: JClass<'a>, entry: ZipFile) {
     set_field(&env, obj, cache::fld_zipentry_ptr(), entry).unwrap();
 }
 
+fn take_archive<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ZipArchive<File> {
+    take_field(&env, obj, cache::fld_zipreader_ptr()).unwrap()
+}
+
 fn make_zip_entry<'a>(env: &JNIEnv<'a>, zip_result: ZipResult<ZipFile<'a>>) -> JObject<'a> {
     let file = match zip_result {
         Ok(file) => file,
@@ -76,7 +80,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_close(
     env: JNIEnv,
     class: JClass,
 ) {
-    let _: ZipArchive<File> = take_field(&env, class, cache::fld_zipreader_ptr()).unwrap();
+    take_archive(&env, class);
 }
 
 #[no_mangle]

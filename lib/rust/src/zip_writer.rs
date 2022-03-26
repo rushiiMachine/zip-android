@@ -13,10 +13,14 @@ use zip::write::FileOptions;
 use zip::ZipWriter;
 
 use crate::cache;
-use crate::interop::{get_field, ReentrantReference, set_field};
+use crate::interop::{get_field, ReentrantReference, set_field, take_field};
 
 fn get_writer<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ReentrantReference<'a, ZipWriter<File>> {
     get_field(&env, obj, cache::fld_zipwriter_ptr()).unwrap()
+}
+
+fn take_writer<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ZipWriter<File> {
+    take_field(&env, obj, cache::fld_zipreader_ptr()).unwrap()
 }
 
 #[no_mangle]
@@ -109,7 +113,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_close(
     env: JNIEnv,
     class: JClass,
 ) {
-    let mut writer = get_writer(&env, class);
+    let mut writer = take_writer(&env, class);
     match writer.finish() {
         Err(e) => env.throw(format!("Failed to close zip: {:?}", e)).unwrap(),
         _ => {}
