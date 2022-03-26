@@ -95,6 +95,7 @@ public class ZipReader implements Closeable, Iterable<ZipEntry> {
 
     /**
      * Get an iterator for all the entries contained in this archive.
+     * Decompresses data when entry read.
      */
     @NotNull
     @Override

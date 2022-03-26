@@ -118,7 +118,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getCompressed
 }
 
 #[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_readEntry(
+pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_read(
     env: JNIEnv,
     class: JClass,
 ) -> jbyteArray {

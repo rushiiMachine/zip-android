@@ -71,5 +71,5 @@ public class ZipEntry {
     /**
      * Reads this file entry's data (decompressed or not depending on how this entry was opened)
      */
-    public native byte[] readEntry();
+    public native byte[] read();
 }

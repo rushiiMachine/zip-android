@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
                 Log.i(TAG, "Entry: ${it.name} Size: ${it.size} Modified: ${it.lastModified} " +
                         "JNI time: ${measureNanoTime { it.size }}ns")
                 if (!it.isDir) {
-                    Log.i(TAG, "Content: ${it.readEntry().decodeToString()}")
+                    Log.i(TAG, "Content: ${it.read().decodeToString()}")
                 }
             }
         }
@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
 
         ZipReader(zipFile).use { zip ->
             Log.i(TAG, "Modified zip comment: ${zip.comment}")
-            Log.i(TAG, "Created entry content: ${zip.openEntry("test.txt")?.readEntry()?.decodeToString()}")
+            Log.i(TAG, "Created entry content: ${zip.openEntry("test.txt")?.read()?.decodeToString()}")
         }
     }
 
