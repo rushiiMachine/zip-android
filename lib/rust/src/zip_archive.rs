@@ -60,9 +60,9 @@ fn make_zip_entry<'a>(env: &JNIEnv<'a>, zip_result: ZipResult<ZipFile<'a>>) -> J
 pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_open(
     env: JNIEnv,
     class: JClass,
-    jstr_path: JString,
+    path: JString,
 ) {
-    let path: String = env.get_string(jstr_path).unwrap().into();
+    let path: String = env.get_string(path).unwrap().into();
     let file = match File::open(Path::new(&path)) {
         Ok(file) => file,
         Err(e) => {
@@ -89,8 +89,10 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__I
     class: JClass,
     index: jint,
 ) -> jobject {
+    let index = index as usize;
+
     let mut zip = get_archive(&env, class);
-    let result = zip.by_index(index as usize);
+    let result = zip.by_index(index);
 
     make_zip_entry(&env, result).into_inner()
 }
@@ -99,9 +101,9 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__I
 pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__Ljava_lang_String_2(
     env: JNIEnv,
     class: JClass,
-    jstr_path: JString,
+    path: JString,
 ) -> jobject {
-    let path: String = env.get_string(jstr_path).unwrap().into();
+    let path: String = env.get_string(path).unwrap().into();
 
     let mut zip = get_archive(&env, class);
     let result = zip.by_name(path.as_str());
@@ -115,8 +117,10 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntryRaw
     class: JClass,
     index: jint,
 ) -> jobject {
+    let index = index as usize;
+
     let mut zip = get_archive(&env, class);
-    let result = zip.by_index_raw(index as usize);
+    let result = zip.by_index_raw(index);
 
     make_zip_entry(&env, result).into_inner()
 }
