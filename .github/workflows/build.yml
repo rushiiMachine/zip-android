@@ -36,7 +36,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            $GITHUB_WORKSPACE/src/lib/rust/target/
+            $GITHUB_WORKSPACE/lib/rust/target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('lib/rust/Cargo.lock') }}
 
       - name: Setup Rust toolchain

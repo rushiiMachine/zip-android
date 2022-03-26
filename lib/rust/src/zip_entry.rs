@@ -11,15 +11,19 @@ use zip::read::ZipFile;
 
 use crate::{
     cache,
-    interop::get_inner,
+    interop::{get_field, ReentrantReference},
 };
+
+fn get_entry<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ReentrantReference<'a, ZipFile<'static>> {
+    get_field(&env, obj, cache::fld_zipentry_ptr()).unwrap()
+}
 
 #[no_mangle]
 pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getName(
     env: JNIEnv,
     class: JClass,
 ) -> jstring {
-    let entry = get_inner::<ZipFile>(&env, class.into()).unwrap();
+    let entry = get_entry(&env, class);
     env.new_string(entry.name()).unwrap().into_inner()
 }
 
@@ -28,7 +32,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getComment(
     env: JNIEnv,
     class: JClass,
 ) -> jstring {
-    let entry = get_inner::<ZipFile>(&env, class.into()).unwrap();
+    let entry = get_entry(&env, class);
     env.new_string(entry.comment()).unwrap().into_inner()
 }
 
@@ -37,7 +41,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getLastModifi
     env: JNIEnv,
     class: JClass,
 ) -> jlong {
-    let modified = get_inner::<ZipFile>(&env, class.into()).unwrap().last_modified();
+    let modified = get_entry(&env, class).last_modified();
     let args: Vec<JValue> = vec![
         (modified.year() - 1900).into(),
         (modified.month() - 1).into(),
@@ -51,7 +55,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getLastModifi
     let gref_class = cache::cls_date();
     let unix_time = env.call_static_method_unchecked(
         JClass::from(gref_class.as_obj()),
-        cache::method_date_utc(),
+        cache::mtod_date_utc(),
         JavaType::Primitive(Long),
         &args,
     ).unwrap();
@@ -64,7 +68,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_isDir(
     env: JNIEnv,
     class: JClass,
 ) -> jboolean {
-    let entry = get_inner::<ZipFile>(&env, class.into()).unwrap();
+    let entry = get_entry(&env, class);
     entry.is_dir().into()
 }
 
@@ -73,7 +77,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getMode(
     env: JNIEnv,
     class: JClass,
 ) -> jint {
-    let entry = get_inner::<ZipFile>(&env, class.into()).unwrap();
+    let entry = get_entry(&env, class);
     entry.unix_mode().unwrap_or(0) as i32
 }
 
@@ -82,7 +86,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getCRC32(
     env: JNIEnv,
     class: JClass,
 ) -> jint {
-    let entry = get_inner::<ZipFile>(&env, class.into()).unwrap();
+    let entry = get_entry(&env, class);
     entry.crc32() as i32
 }
 
@@ -91,7 +95,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getExtraData(
     env: JNIEnv,
     class: JClass,
 ) -> jbyteArray {
-    let entry = get_inner::<ZipFile>(&env, class.into()).unwrap();
+    let entry = get_entry(&env, class);
     env.byte_array_from_slice(entry.extra_data()).unwrap()
 }
 
@@ -100,7 +104,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getSize(
     env: JNIEnv,
     class: JClass,
 ) -> jlong {
-    let entry = get_inner::<ZipFile>(&env, class.into()).unwrap();
+    let entry = get_entry(&env, class);
     entry.size() as i64
 }
 
@@ -109,7 +113,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getCompressed
     env: JNIEnv,
     class: JClass,
 ) -> jlong {
-    let entry = get_inner::<ZipFile>(&env, class.into()).unwrap();
+    let entry = get_entry(&env, class);
     entry.compressed_size() as i64
 }
 
@@ -118,7 +122,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_readEntry(
     env: JNIEnv,
     class: JClass,
 ) -> jbyteArray {
-    let mut entry = get_inner::<ZipFile>(&env, class.into()).unwrap();
+    let mut entry = get_entry(&env, class);
 
     if entry.is_dir() {
         env.throw("Cannot read data from a dir entry!").unwrap();

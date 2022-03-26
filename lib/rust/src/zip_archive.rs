@@ -16,7 +16,19 @@ use zip::{
 };
 
 use crate::cache;
-use crate::interop::{get_inner, set_inner, take_inner};
+use crate::interop::{get_field, ReentrantReference, set_field, take_field};
+
+fn get_archive<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ReentrantReference<'a, ZipArchive<File>> {
+    get_field(&env, obj, cache::fld_zipreader_ptr()).unwrap()
+}
+
+fn set_archive<'a>(env: &JNIEnv<'a>, obj: JClass<'a>, archive: ZipArchive<File>) {
+    set_field(&env, obj, cache::fld_zipreader_ptr(), archive).unwrap();
+}
+
+fn set_entry<'a>(env: &JNIEnv<'a>, obj: JClass<'a>, entry: ZipFile) {
+    set_field(&env, obj, cache::fld_zipentry_ptr(), entry).unwrap();
+}
 
 fn make_zip_entry<'a>(env: &JNIEnv<'a>, zip_result: ZipResult<ZipFile<'a>>) -> JObject<'a> {
     let file = match zip_result {
@@ -36,7 +48,7 @@ fn make_zip_entry<'a>(env: &JNIEnv<'a>, zip_result: ZipResult<ZipFile<'a>>) -> J
         cache::ctor_zipentry(),
         &[],
     ).unwrap();
-    set_inner(&env, zip_entry, file).unwrap();
+    set_entry(&env, zip_entry.into(), file);
     zip_entry
 }
 
@@ -56,7 +68,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_open(
     };
 
     let zip = ZipArchive::new(file).unwrap();
-    set_inner(&env, class.into(), zip).unwrap();
+    set_archive(&env, class, zip);
 }
 
 #[no_mangle]
@@ -64,7 +76,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_close(
     env: JNIEnv,
     class: JClass,
 ) {
-    take_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
+    let _: ZipArchive<File> = take_field(&env, class, cache::fld_zipreader_ptr()).unwrap();
 }
 
 #[no_mangle]
@@ -73,7 +85,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__I
     class: JClass,
     index: jint,
 ) -> jobject {
-    let mut zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
+    let mut zip = get_archive(&env, class);
     let result = zip.by_index(index as usize);
 
     make_zip_entry(&env, result).into_inner()
@@ -87,7 +99,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__L
 ) -> jobject {
     let path: String = env.get_string(jstr_path).unwrap().into();
 
-    let mut zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
+    let mut zip = get_archive(&env, class);
     let result = zip.by_name(path.as_str());
 
     make_zip_entry(&env, result).into_inner()
@@ -99,7 +111,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntryRaw
     class: JClass,
     index: jint,
 ) -> jobject {
-    let mut zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
+    let mut zip = get_archive(&env, class);
     let result = zip.by_index_raw(index as usize);
 
     make_zip_entry(&env, result).into_inner()
@@ -110,7 +122,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getEntryCoun
     env: JNIEnv,
     class: JClass,
 ) -> jint {
-    let zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
+    let zip = get_archive(&env, class);
     zip.len() as jint
 }
 
@@ -119,7 +131,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getRawCommen
     env: JNIEnv,
     class: JClass,
 ) -> jbyteArray {
-    let zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
+    let zip = get_archive(&env, class);
     env.byte_array_from_slice(zip.comment()).unwrap()
 }
 
@@ -128,7 +140,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getEntryName
     env: JNIEnv,
     class: JClass,
 ) -> jobjectArray {
-    let zip = get_inner::<ZipArchive<File>>(&env, class.into()).unwrap();
+    let zip = get_archive(&env, class);
     let names_length = zip.file_names().collect::<Vec<&str>>().len();
 
     let gref_class = cache::cls_string();

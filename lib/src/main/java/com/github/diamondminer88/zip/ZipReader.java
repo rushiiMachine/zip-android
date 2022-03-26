@@ -16,7 +16,7 @@ public class ZipReader implements Closeable, Iterable<ZipEntry> {
     }
 
     @SuppressWarnings("FieldMayBeFinal")
-    private long innerPtr = 0;
+    private long ptr = 0;
 
     /**
      * Open a zip file with readonly operations
@@ -35,12 +35,12 @@ public class ZipReader implements Closeable, Iterable<ZipEntry> {
     }
 
     /**
-     * Opens an archive and sets {@link ZipReader#innerPtr} to the native data.
+     * Opens an archive and sets {@link ZipReader#ptr} to the native data.
      */
     private native void open(String path);
 
     /**
-     * Destructs the underlying native ZipArchive at {@link ZipReader#innerPtr}
+     * Destructs the underlying native ZipArchive at {@link ZipReader#ptr}
      * This MUST be called otherwise you can have a memory leak.
      */
     @Override

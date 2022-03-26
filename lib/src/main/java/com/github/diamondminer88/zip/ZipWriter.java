@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 @SuppressWarnings("unused")
 public class ZipWriter implements Closeable {
     @SuppressWarnings("FieldMayBeFinal")
-    private long innerPtr = 0;
+    private long ptr = 0;
 
     /**
      * Creates an archive to write to. This overwrites any existing archive.

@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class ZipEntry {
-    private final long innerPtr = 0;
+    private final long ptr = 0;
 
     /**
      * Called by JNI.

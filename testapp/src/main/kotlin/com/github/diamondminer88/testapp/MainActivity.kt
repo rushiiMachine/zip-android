@@ -10,6 +10,7 @@ import androidx.core.app.ActivityCompat
 import com.github.diamondminer88.zip.ZipReader
 import com.github.diamondminer88.zip.ZipWriter
 import java.io.File
+import kotlin.system.measureNanoTime
 
 const val TAG = "zip-android"
 
@@ -32,7 +33,8 @@ class MainActivity : AppCompatActivity() {
             Log.i(TAG, "Entries: ${zip.entryNames.joinToString()}")
 
             zip.forEach {
-                Log.i(TAG, "Entry: ${it.name} size: ${it.size} modified: ${it.lastModified}")
+                Log.i(TAG, "Entry: ${it.name} Size: ${it.size} Modified: ${it.lastModified} " +
+                        "JNI time: ${measureNanoTime { it.size }}ns")
                 if (!it.isDir) {
                     Log.i(TAG, "Content: ${it.readEntry().decodeToString()}")
                 }

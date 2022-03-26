@@ -4,7 +4,7 @@ use jni::{
     descriptors::Desc,
     JavaVM,
     JNIEnv,
-    objects::{GlobalRef, JClass, JMethodID, JStaticMethodID},
+    objects::{GlobalRef, JClass, JFieldID, JMethodID, JStaticMethodID},
     sys::{jint, JNI_VERSION_1_6},
 };
 
@@ -38,11 +38,23 @@ macro_rules! static_method {
     }
 }
 
+macro_rules! field {
+    ($variable:ident, $getter:ident) => {
+        static mut $variable: Option<JFieldID> = None;
+        pub fn $getter() -> JFieldID<'static> {
+            unsafe { $variable.unwrap() }
+        }
+    }
+}
+
 class!(CLS_ZIPENTRY, cls_zipentry);
 class!(CLS_STRING, cls_string);
 class!(CLS_DATE, cls_date);
 inst_method!(CTOR_ZIPENTRY, ctor_zipentry);
-static_method!(METHOD_DATE_UTC, method_date_utc);
+static_method!(MTOD_DATE_UTC, mtod_date_utc);
+field!(FLD_ZIPENTRY_PTR, fld_zipentry_ptr);
+field!(FLD_ZIPREADER_PTR, fld_zipreader_ptr);
+field!(FLD_ZIPWRITER_PTR, fld_zipwriter_ptr);
 
 #[no_mangle]
 pub unsafe extern "system" fn JNI_OnLoad(vm: JavaVM, _reserved: c_void) -> jint {
@@ -60,13 +72,34 @@ pub unsafe extern "system" fn JNI_OnLoad(vm: JavaVM, _reserved: c_void) -> jint 
         false,
     ).instance;
 
-    METHOD_DATE_UTC = get_method(
+    MTOD_DATE_UTC = get_method(
         &env,
         "java/util/Date",
         "UTC",
         "(IIIIII)J",
         true,
     ).static_;
+
+    FLD_ZIPENTRY_PTR = get_field(
+        &env,
+        "com/github/diamondminer88/zip/ZipEntry",
+        "ptr",
+        "J",
+    );
+
+    FLD_ZIPREADER_PTR = get_field(
+        &env,
+        "com/github/diamondminer88/zip/ZipReader",
+        "ptr",
+        "J",
+    );
+
+    FLD_ZIPWRITER_PTR = get_field(
+        &env,
+        "com/github/diamondminer88/zip/ZipWriter",
+        "ptr",
+        "J",
+    );
 
     JNI_VERSION_1_6
 }
@@ -75,6 +108,14 @@ fn get_class(env: &JNIEnv, class: &str) -> Option<GlobalRef> {
     let cls = env.find_class(class).unwrap();
     let cls_ref = env.new_global_ref(cls).unwrap();
     Some(cls_ref)
+}
+
+fn get_field<'a, C>(env: &JNIEnv<'a>, class: C, name: &str, sig: &str) -> Option<JFieldID<'static>>
+    where C: Desc<'a, JClass<'a>>
+{
+    let field = env.get_field_id(class, name, sig).unwrap()
+        .into_inner().into();
+    Some(field)
 }
 
 fn get_method<'c, C>(env: &JNIEnv<'c>, class: C, name: &str, sig: &str, is_static: bool) -> UnionGetMethod
