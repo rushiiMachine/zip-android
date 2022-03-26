@@ -20,7 +20,7 @@ fn get_writer<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ReentrantReference<'a, Z
 }
 
 fn take_writer<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ZipWriter<File> {
-    take_field(&env, obj, cache::fld_zipreader_ptr()).unwrap()
+    take_field(&env, obj, cache::fld_zipwriter_ptr()).unwrap()
 }
 
 #[no_mangle]
