@@ -93,6 +93,13 @@ public class ZipWriter implements Closeable {
      */
     public native void writeEntryUncompressed(String path, byte[] data);
 
+//    /**
+//     * Delete entries from this archive.
+//     * This creates a new archive under the hood <i>for now</i>.
+//     * @param entries Target paths of entries
+//     */
+//    public native void deleteEntries(String... entries);
+
     /**
      * Finalizes the archive and saves to disk.
      * You cannot use this ZipWriter instance after closing it.

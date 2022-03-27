@@ -7,9 +7,9 @@ use std::{
 use jni::{
     JNIEnv,
     objects::{JClass, JString},
-    sys::{jboolean, jbyteArray},
+    sys::{jboolean, jbyteArray, jobjectArray, jsize},
 };
-use zip::{CompressionMethod, ZipWriter};
+use zip::{CompressionMethod, ZipArchive, ZipWriter};
 use zip::write::FileOptions;
 
 use crate::cache;
@@ -145,3 +145,43 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_close(
         _ => {}
     }
 }
+
+
+#[no_mangle]
+pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_deleteEntries(
+    env: JNIEnv,
+    class: JClass,
+    jentries: jobjectArray,
+) {
+    let arr_length = env.get_array_length(jentries).unwrap() as usize;
+    let mut entries: Vec<String> = Vec::with_capacity(arr_length);
+
+    for i in 0..(arr_length - 1) {
+        let obj = env.get_object_array_element(jentries, i as jsize).unwrap();
+        entries[i] = env.get_string(obj.into()).unwrap().into()
+    }
+
+    // FIXME: panics at take_field(), no clue
+    let old_file = take_writer(&env, class).finish().unwrap();
+    let mut reader = ZipArchive::new(old_file).unwrap();
+    let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
+
+
+    for i in 0..(reader.len() - 1) {
+        let entry = reader.by_index_raw(i).unwrap();
+        if !entries.contains(&entry.name().to_string()) {
+            writer.raw_copy_file(entry).unwrap();
+        }
+    }
+
+    let bytes = writer.finish().unwrap().into_inner();
+    drop(writer);
+
+    let mut file = reader.into_inner();
+    file.write_all(bytes.as_slice()).unwrap();
+    drop(bytes);
+
+    let archive = ZipWriter::new_append(file).unwrap();
+    set_writer(&env, class, archive);
+}
+
