@@ -71,7 +71,13 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_open(
         }
     };
 
-    let zip = ZipArchive::new(file).unwrap();
+    let zip = match ZipArchive::new(file) {
+        Ok(zip) => zip,
+        Err(e) => {
+            env.throw(format!("Failed to open archive: {:?}", e)).unwrap();
+            return;
+        }
+    };
     set_archive(&env, class, zip);
 }
 

@@ -1,5 +1,5 @@
 use std::{
-    fs::File,
+    fs::{File, OpenOptions},
     io::{Cursor, Write},
     path::Path,
 };
@@ -33,12 +33,14 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open__Ljava_
     let append = append != 0;
     let path: String = env.get_string(path).unwrap().into();
 
-    let fopen_result = File::options()
+    let fopen = OpenOptions::new()
         .read(true)
         .write(true)
+        .create(true)
+        .truncate(!append)
         .open(Path::new(&path));
 
-    let file = match fopen_result {
+    let file = match fopen {
         Ok(file) => file,
         Err(e) => {
             env.throw(format!("Failed to open file: {:?}", e)).unwrap();
@@ -47,9 +49,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open__Ljava_
     };
 
     let writer = if !append {
-        let mut writer = ZipWriter::new(file);
-        writer.start_file("zip", FileOptions::default()).unwrap();
-        writer
+        ZipWriter::new(file)
     } else {
         match ZipWriter::new_append(file) {
             Ok(w) => w,

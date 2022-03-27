@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        ZipWriter(zipFile).use { zip ->
+        ZipWriter(zipFile, true).use { zip ->
             zip.setComment("a comment".toByteArray())
             zip.writeEntry("test.txt", "hot garbage")
             zip.writeEntryUncompressed("uncompressed.txt", "ihy".toByteArray())
@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
 
         ZipReader(zipFile).use { zip ->
             Log.i(TAG, "Modified zip comment: ${zip.comment}")
+            Log.i(TAG, "Modified zip entries: ${zip.entryNames.joinToString()}")
             Log.i(TAG, "Created entry content: ${zip.openEntry("test.txt")?.read()?.decodeToString()}")
         }
     }
