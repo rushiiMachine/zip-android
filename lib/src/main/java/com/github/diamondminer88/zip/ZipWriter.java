@@ -93,6 +93,12 @@ public class ZipWriter implements Closeable {
      */
     public native void writeEntryUncompressed(String path, byte[] data);
 
+    /**
+     * Create a directory in the archive.
+     * @param path Path to directory. Will automatically append a `/` if the path does not end with one already.
+     */
+    public native void writeDir(String path);
+
 //    /**
 //     * Delete entries from this archive.
 //     * This creates a new archive under the hood <i>for now</i>.

@@ -32,6 +32,9 @@ public class ZipUtil {
 
             if (!entry.isDir())
                 writer.writeEntry(entry.getName(), entry.read());
+            else {
+                writer.writeDir(entry.getName());
+            }
         }
 
         reader.close();

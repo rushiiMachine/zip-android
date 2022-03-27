@@ -135,6 +135,20 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_writeEntryUn
 }
 
 #[no_mangle]
+pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_writeDir(
+    env: JNIEnv,
+    class: JClass,
+    path: JString,
+) {
+    let path = env.get_string(path).unwrap();
+    let mut writer = get_writer(&env, class);
+
+    let options = FileOptions::default()
+        .compression_method(CompressionMethod::Stored);
+    writer.add_directory(path, options).unwrap();
+}
+
+#[no_mangle]
 pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_close(
     env: JNIEnv,
     class: JClass,
