@@ -9,4 +9,5 @@ crate_type = ["cdylib"]
 [dependencies]
 zip = { version = "0.6.0", features = ["deflate-miniz"], default-features = false }
 thiserror = "1.0.30"
+jni_fn = "0.1.0"
 jni = "0.19.0"

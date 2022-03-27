@@ -6,9 +6,9 @@ use std::{
 use jni::{
     JNIEnv,
     objects::{JClass, JObject, JString},
-    sys::{jint, jobject, jobjectArray, jsize},
+    sys::{jbyteArray, jint, jobject, jobjectArray, jsize},
 };
-use jni::sys::jbyteArray;
+use jni_fn::jni_fn;
 use zip::{
     read::ZipFile,
     result::{ZipError, ZipResult},
@@ -56,8 +56,8 @@ fn make_zip_entry<'a>(env: &JNIEnv<'a>, zip_result: ZipResult<ZipFile<'a>>) -> J
     zip_entry
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_open(
+#[jni_fn("com.github.diamondminer88.zip.ZipReader")]
+pub fn open(
     env: JNIEnv,
     class: JClass,
     path: JString,
@@ -81,8 +81,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_open(
     set_archive(&env, class, zip);
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_close(
+#[jni_fn("com.github.diamondminer88.zip.ZipReader")]
+pub fn close(
     env: JNIEnv,
     class: JClass,
 ) {
@@ -117,8 +117,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__L
     make_zip_entry(&env, result).into_inner()
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntryRaw__I(
+#[jni_fn("com.github.diamondminer88.zip.ZipReader")]
+pub fn openEntryRaw(
     env: JNIEnv,
     class: JClass,
     index: jint,
@@ -131,8 +131,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntryRaw
     make_zip_entry(&env, result).into_inner()
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getEntryCount(
+#[jni_fn("com.github.diamondminer88.zip.ZipReader")]
+pub fn getEntryCount(
     env: JNIEnv,
     class: JClass,
 ) -> jint {
@@ -140,8 +140,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getEntryCoun
     zip.len() as jint
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getRawComment(
+#[jni_fn("com.github.diamondminer88.zip.ZipReader")]
+pub fn getRawComment(
     env: JNIEnv,
     class: JClass,
 ) -> jbyteArray {
@@ -149,8 +149,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getRawCommen
     env.byte_array_from_slice(zip.comment()).unwrap()
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_getEntryNames(
+#[jni_fn("com.github.diamondminer88.zip.ZipReader")]
+pub fn getEntryNames(
     env: JNIEnv,
     class: JClass,
 ) -> jobjectArray {

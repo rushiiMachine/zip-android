@@ -90,6 +90,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8eaf4bc02d17cbdd7ff4c7438cafcdf7fb9a4613313ad11b4f8fefe7d3fa0130"
 
 [[package]]
+name = "jni_fn"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e030e1962524a15d7d16d1504647c7100cfafab70f1e3450203eadd5f5f7bf5"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.112"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -242,6 +253,7 @@ name = "ziprs"
 version = "1.0.0"
 dependencies = [
  "jni",
+ "jni_fn",
  "thiserror",
  "zip",
 ]

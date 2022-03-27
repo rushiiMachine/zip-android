@@ -7,6 +7,7 @@ use jni::{
     signature::Primitive::Long,
     sys::{jboolean, jbyteArray, jint, jlong, jstring},
 };
+use jni_fn::jni_fn;
 use zip::read::ZipFile;
 
 use crate::{
@@ -18,8 +19,8 @@ fn get_entry<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ReentrantReference<'a, Zi
     get_field(&env, obj, cache::fld_zipentry_ptr()).unwrap()
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getName(
+#[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
+pub fn getName(
     env: JNIEnv,
     class: JClass,
 ) -> jstring {
@@ -27,8 +28,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getName(
     env.new_string(entry.name()).unwrap().into_inner()
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getComment(
+#[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
+pub fn getComment(
     env: JNIEnv,
     class: JClass,
 ) -> jstring {
@@ -36,8 +37,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getComment(
     env.new_string(entry.comment()).unwrap().into_inner()
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getLastModified(
+#[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
+pub fn getLastModified(
     env: JNIEnv,
     class: JClass,
 ) -> jlong {
@@ -63,8 +64,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getLastModifi
     unix_time.j().unwrap()
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_isDir(
+#[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
+pub fn isDir(
     env: JNIEnv,
     class: JClass,
 ) -> jboolean {
@@ -72,8 +73,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_isDir(
     entry.is_dir().into()
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getMode(
+#[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
+pub fn getMode(
     env: JNIEnv,
     class: JClass,
 ) -> jint {
@@ -81,8 +82,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getMode(
     entry.unix_mode().unwrap_or(0) as i32
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getCRC32(
+#[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
+pub fn getCRC32(
     env: JNIEnv,
     class: JClass,
 ) -> jint {
@@ -90,8 +91,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getCRC32(
     entry.crc32() as i32
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getExtraData(
+#[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
+pub fn getExtraData(
     env: JNIEnv,
     class: JClass,
 ) -> jbyteArray {
@@ -99,8 +100,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getExtraData(
     env.byte_array_from_slice(entry.extra_data()).unwrap()
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getSize(
+#[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
+pub fn getSize(
     env: JNIEnv,
     class: JClass,
 ) -> jlong {
@@ -108,8 +109,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getSize(
     entry.size() as i64
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getCompressedSize(
+#[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
+pub fn getCompressedSize(
     env: JNIEnv,
     class: JClass,
 ) -> jlong {
@@ -117,8 +118,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_getCompressed
     entry.compressed_size() as i64
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipEntry_read(
+#[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
+pub fn read(
     env: JNIEnv,
     class: JClass,
 ) -> jbyteArray {

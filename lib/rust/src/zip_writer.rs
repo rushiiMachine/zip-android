@@ -9,6 +9,7 @@ use jni::{
     objects::{JClass, JString},
     sys::{jboolean, jbyteArray, jobjectArray, jsize},
 };
+use jni_fn::jni_fn;
 use zip::{CompressionMethod, ZipArchive, ZipWriter};
 use zip::write::FileOptions;
 
@@ -87,21 +88,20 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open___3B(
     // set_writer(&env, class, writer);
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_setComment(
+#[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
+pub fn setComment(
     env: JNIEnv,
     class: JClass,
     bytes: jbyteArray,
 ) {
     let bytes = env.convert_byte_array(bytes).unwrap();
-
     let mut writer = get_writer(&env, class);
 
     writer.set_raw_comment(bytes);
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_writeEntry(
+#[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
+pub fn writeEntry(
     env: JNIEnv,
     class: JClass,
     path: JString,
@@ -116,8 +116,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_writeEntry(
     writer.write_all(&bytes).unwrap();
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_writeEntryUncompressed(
+#[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
+pub fn writeEntryUncompressed(
     env: JNIEnv,
     class: JClass,
     path: JString,
@@ -134,8 +134,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_writeEntryUn
     writer.write_all(&bytes).unwrap();
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_writeDir(
+#[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
+pub fn writeDir(
     env: JNIEnv,
     class: JClass,
     path: JString,
@@ -148,8 +148,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_writeDir(
     writer.add_directory(path, options).unwrap();
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_close(
+#[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
+pub fn close(
     env: JNIEnv,
     class: JClass,
 ) {
@@ -161,8 +161,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_close(
 }
 
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_deleteEntries(
+#[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
+pub fn deleteEntries(
     env: JNIEnv,
     class: JClass,
     jentries: jobjectArray,
