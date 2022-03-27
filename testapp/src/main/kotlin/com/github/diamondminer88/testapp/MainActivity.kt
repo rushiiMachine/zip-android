@@ -8,9 +8,11 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.github.diamondminer88.zip.ZipReader
+import com.github.diamondminer88.zip.ZipUtil
 import com.github.diamondminer88.zip.ZipWriter
 import java.io.File
 import kotlin.system.measureNanoTime
+import kotlin.system.measureTimeMillis
 
 const val TAG = "zip-android"
 
@@ -51,6 +53,18 @@ class MainActivity : AppCompatActivity() {
             Log.i(TAG, "Modified zip comment: ${zip.comment}")
             Log.i(TAG, "Modified zip entries: ${zip.entryNames.joinToString()}")
             Log.i(TAG, "Created entry content: ${zip.openEntry("test.txt")?.read()?.decodeToString()}")
+        }
+
+        val zipFile2 = File(baseDir, "config.arm64_v8a.apk")
+        if (zipFile.exists()) {
+            val deleteTime = measureTimeMillis {
+                ZipUtil.deleteEntries(zipFile2, "AndroidManifest.xml")
+            }
+            Log.i(TAG, "Deleting took: ${deleteTime}ms")
+
+            ZipReader(zipFile2).use { zip ->
+                Log.i(TAG, "Delete zip entries: ${zip.entryNames.joinToString()}")
+            }
         }
     }
 

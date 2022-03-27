@@ -15,6 +15,10 @@ use zip::write::FileOptions;
 use crate::cache;
 use crate::interop::{get_field, ReentrantReference, set_field, take_field};
 
+fn set_writer<'a>(env: &JNIEnv<'a>, obj: JClass<'a>, writer: ZipWriter<File>) {
+    set_field(&env, obj, cache::fld_zipwriter_ptr(), writer).unwrap()
+}
+
 fn get_writer<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ReentrantReference<'a, ZipWriter<File>> {
     get_field(&env, obj, cache::fld_zipwriter_ptr()).unwrap()
 }
@@ -60,7 +64,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open__Ljava_
         }
     };
 
-    set_field(&env, class, cache::fld_zipwriter_ptr(), writer).unwrap();
+    set_writer(&env, class, writer);
 }
 
 #[no_mangle]
@@ -80,7 +84,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open___3B(
         }
     };
 
-    set_field(&env, class, cache::fld_zipwriter_ptr(), writer).unwrap()
+    // set_writer(&env, class, writer);
 }
 
 #[no_mangle]
