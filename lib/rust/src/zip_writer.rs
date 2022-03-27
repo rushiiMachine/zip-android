@@ -46,8 +46,10 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open__Ljava_
         }
     };
 
-    let writer = if append {
-        ZipWriter::new(file)
+    let writer = if !append {
+        let mut writer = ZipWriter::new(file);
+        writer.start_file("zip", FileOptions::default()).unwrap();
+        writer
     } else {
         match ZipWriter::new_append(file) {
             Ok(w) => w,
