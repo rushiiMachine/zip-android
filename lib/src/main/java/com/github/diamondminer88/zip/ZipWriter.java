@@ -87,6 +87,13 @@ public class ZipWriter implements Closeable {
     }
 
     /**
+     * Create an entry and write bytes to it without compressing.
+     * @param path Path to entry inside the archive
+     * @param data Raw bytes
+     */
+    public native void writeEntryUncompressed(String path, byte[] data);
+
+    /**
      * Finalizes the archive and saves to disk.
      * You cannot use this ZipWriter instance after closing it.
      */

@@ -44,6 +44,7 @@ class MainActivity : AppCompatActivity() {
         ZipWriter(zipFile).use { zip ->
             zip.setComment("a comment".toByteArray())
             zip.writeEntry("test.txt", "hot garbage")
+            zip.writeEntryUncompressed("uncompressed.txt", "ihy".toByteArray())
         }
 
         ZipReader(zipFile).use { zip ->

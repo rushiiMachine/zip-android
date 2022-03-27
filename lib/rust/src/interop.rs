@@ -1,4 +1,4 @@
-// Modified version of interop.rs from this:
+// Modified version of interop.rs from here:
 // https://github.com/kawamuray/wasmtime-java
 
 use std::{
@@ -99,17 +99,6 @@ impl<'a, T> std::ops::DerefMut for ReentrantReference<'a, T> {
 pub fn into_raw<T>(val: T) -> jlong {
     Box::into_raw(Box::new(ReentrantLock::new(val))) as jlong
 }
-
-// /// Restore a Rust object of type `T` from a pointer.
-// /// This is the reverse operation of `into_raw`.
-// pub fn from_raw<T>(ptr: jlong) -> Result<T> {
-//     Ok((*unsafe { Box::from_raw(ptr as *mut Mutex<T>) }).into_inner()?)
-// }
-//
-// pub fn ref_from_raw<'a, T>(ptr: jlong) -> Result<ReentrantReference<'a, T>> {
-//     let ptr = ptr as *mut ReentrantLock<T>;
-//     unsafe { (*ptr).lock() }
-// }
 
 macro_rules! non_null {
     ( $obj:expr, $ctx:expr ) => {

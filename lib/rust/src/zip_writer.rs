@@ -9,8 +9,8 @@ use jni::{
     objects::{JClass, JString},
     sys::{jboolean, jbyteArray},
 };
+use zip::{CompressionMethod, ZipWriter};
 use zip::write::FileOptions;
-use zip::ZipWriter;
 
 use crate::cache;
 use crate::interop::{get_field, ReentrantReference, set_field, take_field};
@@ -107,6 +107,24 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_writeEntry(
     let mut writer = get_writer(&env, class);
 
     writer.start_file(path, FileOptions::default()).unwrap();
+    writer.write_all(&bytes).unwrap();
+}
+
+#[no_mangle]
+pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_writeEntryUncompressed(
+    env: JNIEnv,
+    class: JClass,
+    path: JString,
+    bytes: jbyteArray,
+) {
+    let path = env.get_string(path).unwrap();
+    let bytes = env.convert_byte_array(bytes).unwrap();
+    let mut writer = get_writer(&env, class);
+
+    let options = FileOptions::default()
+        .compression_method(CompressionMethod::Stored);
+
+    writer.start_file(path, options).unwrap();
     writer.write_all(&bytes).unwrap();
 }
 
