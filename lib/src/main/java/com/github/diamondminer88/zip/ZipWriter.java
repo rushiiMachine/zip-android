@@ -43,13 +43,13 @@ public class ZipWriter implements Closeable {
         open(file.getAbsolutePath(), append);
     }
 
-    /**
-     * Append to an existing archive.
-     * @param data Existing archive's bytes
-     */
-    public ZipWriter(byte[] data) {
-        open(data);
-    }
+//    /**
+//     * Append to an existing archive.
+//     * @param data Existing archive's bytes
+//     */
+//    public ZipWriter(byte[] data) {
+//        open(data);
+//    }
 
     /**
      * Opens/creates an archive to write to.
