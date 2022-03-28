@@ -6,6 +6,10 @@ import java.nio.charset.StandardCharsets;
 
 @SuppressWarnings("unused")
 public class ZipWriter implements Closeable {
+    static {
+        System.loadLibrary("ziprs");
+    }
+
     @SuppressWarnings("FieldMayBeFinal")
     private long ptr = 0;
 

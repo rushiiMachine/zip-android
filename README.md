@@ -6,11 +6,11 @@ Java Android bindings for [zip-rs](https://github.com/zip-rs/zip), a native rust
 
 ```kotlin
 repositories {
-    maven("https://redditvanced.ddns.net/maven")
+    maven("https://redditvanced.ddns.net/maven/releases")
 }
 
 dependencies {
-    implementation("com.github.diamondminer88:zip-android:1.0.0")
+    implementation("com.github.diamondminer88:zip-android:1.0.0@aar")
 }
 ```
 
