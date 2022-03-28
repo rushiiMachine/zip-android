@@ -48,7 +48,7 @@ jobs:
 
       - name: Setup Rust Environment
         run: |
-          rustup target add aarch64-linux-android armv7-linux-androideabi
+          rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
           cargo ndk --version || cargo install cargo-ndk
 
       - name: Build and Maven publish
