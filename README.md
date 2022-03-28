@@ -33,5 +33,10 @@ ZipReader(zipFile).use { zip ->
 ZipWriter(zipFile).use { zip ->
     zip.setComment("a comment".toByteArray())
     zip.writeEntry("test.txt", "hot garbage")
+    zip.writeDir("com/github/diamondminer88/zip")
+    zip.deleteEntries("abc.txt")
+
+    // Use this for .so, with zipalign-ing
+    zip.writeEntryUncompressed("uncompressed.txt", "ihy".toByteArray())
 }
 ```
