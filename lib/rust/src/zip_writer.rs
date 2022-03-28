@@ -68,25 +68,25 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open__Ljava_
     set_writer(&env, class, writer);
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open___3B(
-    env: JNIEnv,
-    class: JClass,
-    bytes: jbyteArray,
-) {
-    let bytes = env.convert_byte_array(bytes).unwrap();
-    let cursor = Cursor::new(bytes);
-
-    let writer = match ZipWriter::new_append(cursor) {
-        Ok(w) => w,
-        Err(e) => {
-            env.throw(format!("Failed to open zip in append mode: {:?}", e)).unwrap();
-            return;
-        }
-    };
-
-    // set_writer(&env, class, writer);
-}
+// #[no_mangle]
+// pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open___3B(
+//     env: JNIEnv,
+//     class: JClass,
+//     bytes: jbyteArray,
+// ) {
+//     let bytes = env.convert_byte_array(bytes).unwrap();
+//     let cursor = Cursor::new(bytes);
+//
+//     let writer = match ZipWriter::new_append(cursor) {
+//         Ok(w) => w,
+//         Err(e) => {
+//             env.throw(format!("Failed to open zip in append mode: {:?}", e)).unwrap();
+//             return;
+//         }
+//     };
+//
+//     set_writer(&env, class, writer);
+// }
 
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
 pub fn setComment(
@@ -181,6 +181,8 @@ pub fn deleteEntries(
 
     let mut reader = ZipArchive::new(old_file).unwrap();
     let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
+
+    writer.set_raw_comment(reader.comment().into());
 
     for i in 0..reader.len() {
         let entry = reader.by_index_raw(i).unwrap();
