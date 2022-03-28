@@ -1,6 +1,6 @@
 use std::{
     fs::{File, OpenOptions},
-    io::{Cursor, Write},
+    io::{Cursor, Seek, SeekFrom, Write},
     path::Path,
 };
 
@@ -165,25 +165,26 @@ pub fn close(
 pub fn deleteEntries(
     env: JNIEnv,
     class: JClass,
-    jentries: jobjectArray,
+    jignored: jobjectArray,
 ) {
-    let arr_length = env.get_array_length(jentries).unwrap() as usize;
-    let mut entries: Vec<String> = Vec::with_capacity(arr_length);
+    let arr_length = env.get_array_length(jignored).unwrap() as usize;
+    let ignored: Vec<String> = (0..arr_length)
+        .map(|i| {
+            let obj = env.get_object_array_element(jignored, i as jsize).unwrap();
+            env.get_string(obj.into()).unwrap().into()
+        })
+        .collect();
 
-    for i in 0..(arr_length - 1) {
-        let obj = env.get_object_array_element(jentries, i as jsize).unwrap();
-        entries[i] = env.get_string(obj.into()).unwrap().into()
-    }
+    let mut old_writer = take_writer(&env, class.clone());
+    let old_file = old_writer.finish().unwrap();
+    drop(old_writer);
 
-    // FIXME: panics at take_field(), no clue
-    let old_file = take_writer(&env, class).finish().unwrap();
     let mut reader = ZipArchive::new(old_file).unwrap();
     let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
 
-
-    for i in 0..(reader.len() - 1) {
+    for i in 0..reader.len() {
         let entry = reader.by_index_raw(i).unwrap();
-        if !entries.contains(&entry.name().to_string()) {
+        if !ignored.contains(&entry.name().to_string()) {
             writer.raw_copy_file(entry).unwrap();
         }
     }
@@ -192,10 +193,17 @@ pub fn deleteEntries(
     drop(writer);
 
     let mut file = reader.into_inner();
+    file.set_len(0).unwrap();
+    file.seek(SeekFrom::Start(0)).unwrap();
     file.write_all(bytes.as_slice()).unwrap();
     drop(bytes);
 
-    let archive = ZipWriter::new_append(file).unwrap();
+    let archive = match ZipWriter::new_append(file) {
+        Ok(a) => a,
+        Err(e) => {
+            env.throw(format!("Failed to open archive after deleting entries: {:?}", e)).unwrap();
+            return;
+        }
+    };
     set_writer(&env, class, archive);
 }
-

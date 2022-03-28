@@ -99,12 +99,13 @@ public class ZipWriter implements Closeable {
      */
     public native void writeDir(String path);
 
-//    /**
-//     * Delete entries from this archive.
-//     * This creates a new archive under the hood <i>for now</i>.
-//     * @param entries Target paths of entries
-//     */
-//    public native void deleteEntries(String... entries);
+    /**
+     * Delete entries from this archive.
+     * This creates a new archive under the hood <i>for now</i>, until zip-rs maintainers fix.
+     * The archive will be saved once to disk before this operation occurs.
+     * @param entries Target paths of entries
+     */
+    public native void deleteEntries(String... entries);
 
     /**
      * Finalizes the archive and saves to disk.
