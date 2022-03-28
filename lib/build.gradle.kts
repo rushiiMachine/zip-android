@@ -30,7 +30,7 @@ cargo {
     module = "./rust"
     profile = "release"
     libname = "ziprs"
-    targets = listOf("arm", "arm64")
+    targets = listOf("arm", "arm64", "x86", "x86_64")
 }
 
 tasks.whenTaskAdded {

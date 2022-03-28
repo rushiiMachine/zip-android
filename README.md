@@ -40,3 +40,9 @@ ZipWriter(zipFile).use { zip ->
     zip.writeEntryUncompressed("uncompressed.txt", "ihy".toByteArray())
 }
 ```
+
+### Building Prerequisites
+1. `rustup install nightly && rustup default nightly`
+2. `rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android`
+3. `cargo install --force cargo-ndk`
+
