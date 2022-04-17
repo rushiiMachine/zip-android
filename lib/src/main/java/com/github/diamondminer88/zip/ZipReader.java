@@ -1,5 +1,6 @@
 package com.github.diamondminer88.zip;
 
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,6 +16,10 @@ public class ZipReader implements Closeable, Iterable<ZipEntry> {
         System.loadLibrary("ziprs");
     }
 
+    /**
+     * Internal pointer to ZipArchive struct
+     */
+    @Internal
     @SuppressWarnings("FieldMayBeFinal")
     private long ptr = 0;
 
@@ -22,7 +27,7 @@ public class ZipReader implements Closeable, Iterable<ZipEntry> {
      * Open a zip file with readonly operations
      * @param path Path to the archive
      */
-    public ZipReader(String path) {
+    public ZipReader(@NotNull String path) {
         open(path);
     }
 
@@ -30,7 +35,7 @@ public class ZipReader implements Closeable, Iterable<ZipEntry> {
      * Open a zip with readonly operations
      * @param file File of the archive
      */
-    public ZipReader(File file) {
+    public ZipReader(@NotNull File file) {
         open(file.getAbsolutePath());
     }
 
@@ -58,7 +63,7 @@ public class ZipReader implements Closeable, Iterable<ZipEntry> {
      * @param path Path to the file inside the archive.
      */
     @Nullable
-    public native ZipEntry openEntry(String path);
+    public native ZipEntry openEntry(@NotNull String path);
 
     /**
      * Get a contained file by index without decompressing it.
@@ -94,8 +99,8 @@ public class ZipReader implements Closeable, Iterable<ZipEntry> {
     }
 
     /**
-     * Get an iterator for all the entries contained in this archive.
-     * Decompresses data when entry read.
+     * Iterate over all the entries contained in this archive.
+     * Opens entry with decompressing.
      */
     @NotNull
     @Override

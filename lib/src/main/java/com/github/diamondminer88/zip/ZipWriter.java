@@ -1,5 +1,7 @@
 package com.github.diamondminer88.zip;
 
+import org.jetbrains.annotations.ApiStatus.Internal;
+
 import java.io.Closeable;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -10,6 +12,10 @@ public class ZipWriter implements Closeable {
         System.loadLibrary("ziprs");
     }
 
+    /**
+     * Internal pointer to ZipWriter struct
+     */
+    @Internal
     @SuppressWarnings("FieldMayBeFinal")
     private long ptr = 0;
 
@@ -112,7 +118,7 @@ public class ZipWriter implements Closeable {
     public native void deleteEntries(String... entries);
 
     /**
-     * Finalizes the archive and saves to disk.
+     * Finalizes the writer and saves to disk.
      * You cannot use this ZipWriter instance after closing it.
      */
     @Override

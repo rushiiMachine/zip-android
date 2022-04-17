@@ -1,10 +1,15 @@
 package com.github.diamondminer88.zip;
 
+import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class ZipEntry {
+    /**
+     * Internal pointer to ZipFile struct
+     */
+    @Internal
     private final long ptr = 0;
 
     /**
