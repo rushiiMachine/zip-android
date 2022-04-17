@@ -89,8 +89,8 @@ pub fn close(
     take_archive(&env, class);
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__I(
+#[jni_fn("com.github.diamondminer88.zip.ZipReader")]
+pub fn openEntry(
     env: JNIEnv,
     class: JClass,
     index: jint,
@@ -103,8 +103,8 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__I
     make_zip_entry(&env, result).into_inner()
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__Ljava_lang_String_2(
+#[jni_fn("com.github.diamondminer88.zip.ZipReader")]
+pub fn openEntry(
     env: JNIEnv,
     class: JClass,
     path: JString,

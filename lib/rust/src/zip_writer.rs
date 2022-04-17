@@ -28,8 +28,8 @@ fn take_writer<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ZipWriter<File> {
     take_field(&env, obj, cache::fld_zipwriter_ptr()).unwrap()
 }
 
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open__Ljava_lang_String_2Z(
+#[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
+pub fn open(
     env: JNIEnv,
     class: JClass,
     path: JString,
