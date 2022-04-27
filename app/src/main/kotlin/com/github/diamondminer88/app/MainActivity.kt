@@ -1,4 +1,4 @@
-package com.github.diamondminer88.testapp
+package com.github.diamondminer88.app
 
 import android.Manifest
 import android.content.pm.PackageManager

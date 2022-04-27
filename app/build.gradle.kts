@@ -12,7 +12,7 @@ android {
     compileSdk = 31
 
     defaultConfig {
-        applicationId = "com.github.diamondminer88.zip.testapp"
+        applicationId = "com.github.diamondminer88.zip.app"
         minSdk = 24
         targetSdk = 29
         versionCode = 1
@@ -22,7 +22,6 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFile("proguard-rules.pro")
         }
     }
     compileOptions {
