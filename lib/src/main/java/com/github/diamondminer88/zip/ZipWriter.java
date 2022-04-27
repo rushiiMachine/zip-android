@@ -5,6 +5,7 @@ import org.jetbrains.annotations.ApiStatus.Internal;
 import java.io.Closeable;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 
 @SuppressWarnings("unused")
 public class ZipWriter implements Closeable {
@@ -116,6 +117,19 @@ public class ZipWriter implements Closeable {
      * @param entries Target paths of entries
      */
     public native void deleteEntries(String... entries);
+
+    /**
+     * Delete entries from this archive.
+     * This creates a new archive under the hood <i>for now</i>, until zip-rs maintainers fix.
+     * The archive will be saved once to disk before this operation occurs.
+     * @param entries Target paths of entries
+     */
+    public void deleteEntries(Collection<String> entries) {
+        var entriesArr = new String[entries.size()];
+        entries.toArray(entriesArr);
+
+        deleteEntries(entriesArr);
+    }
 
     /**
      * Finalizes the writer and saves to disk.
