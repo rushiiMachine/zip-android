@@ -9,6 +9,7 @@ use jni::{
     objects::{JClass, JString},
     sys::{jboolean, jbyteArray, jobjectArray, jsize},
 };
+use jni::sys::jshort;
 use jni_fn::jni_fn;
 use zip::{CompressionMethod, ZipArchive, ZipWriter};
 use zip::write::FileOptions;
@@ -131,6 +132,47 @@ pub fn writeEntryUncompressed(
         .compression_method(CompressionMethod::Stored);
 
     writer.start_file(path, options).unwrap();
+    writer.write_all(&bytes).unwrap();
+}
+
+#[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
+pub fn writeUncompressedAligned(
+    env: JNIEnv,
+    class: JClass,
+    path: JString,
+    alignment: jshort,
+    bytes: jbyteArray,
+) {
+    let path = env.get_string(path).unwrap();
+    let alignment = alignment as u16;
+    let bytes = env.convert_byte_array(bytes).unwrap();
+    let mut writer = get_writer(&env, class);
+
+    let options = FileOptions::default()
+        .compression_method(CompressionMethod::Stored);
+
+    writer.start_file_aligned(path, options, alignment).unwrap();
+    writer.write_all(&bytes).unwrap();
+}
+
+#[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
+pub fn writeAligned(
+    env: JNIEnv,
+    class: JClass,
+    path: JString,
+    alignment: jshort,
+    bytes: jbyteArray,
+) {
+    let path = env.get_string(path).unwrap();
+    let alignment = alignment as u16;
+    let bytes = env.convert_byte_array(bytes).unwrap();
+    let mut writer = get_writer(&env, class);
+
+    writer.start_file_aligned(
+        path,
+        FileOptions::default(),
+        alignment,
+    ).unwrap();
     writer.write_all(&bytes).unwrap();
 }
 

@@ -84,7 +84,7 @@ public class ZipWriter implements Closeable {
     /**
      * Create an entry and write bytes to it.
      * @param path Path to entry inside the archive
-     * @param data Raw bytes
+     * @param data Raw data
      */
     public native void writeEntry(String path, byte[] data);
 
@@ -100,9 +100,25 @@ public class ZipWriter implements Closeable {
     /**
      * Create an entry and write bytes to it without compressing.
      * @param path Path to entry inside the archive
-     * @param data Raw bytes
+     * @param data Raw data
      */
     public native void writeEntryUncompressed(String path, byte[] data);
+
+    /**
+     * Create an aligned entry and write bytes to it without compressing.
+     * @param path      Path to entry inside the archive
+     * @param alignment Byte alignment
+     * @param data      Raw data
+     */
+    public native void writeUncompressedAligned(String path, short alignment, byte[] data);
+
+    /**
+     * Create an aligned entry and write bytes to it.
+     * @param path      Path to entry inside the archive
+     * @param alignment Byte alignment
+     * @param data      Raw data
+     */
+    public native void writeAligned(String path, short alignment, byte[] data);
 
     /**
      * Create a directory in the archive.
