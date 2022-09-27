@@ -25,6 +25,8 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
+    ndkVersion = sdkDirectory.resolve("ndk").listFilesOrdered().last().name
 }
 
 cargo {
