@@ -26,7 +26,7 @@ android {
 }
 
 cargo {
-    module = "./rust"
+    module = "../jni"
     profile = "release"
     libname = "ziprs"
     targets = listOf("arm", "arm64", "x86", "x86_64")
