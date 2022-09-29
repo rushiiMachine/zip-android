@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.support.listFilesOrdered
+
 group = "com.github.diamondminer88"
 version = "1.1.0"
 
@@ -8,17 +10,11 @@ plugins {
 }
 
 android {
-    compileSdk = 31
+    compileSdk = 33
 
     defaultConfig {
         minSdk = 21
-        targetSdk = 29
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-        }
+        targetSdk = 33
     }
 
     compileOptions {
