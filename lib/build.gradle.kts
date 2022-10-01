@@ -85,10 +85,12 @@ afterEvaluate {
             val configureBasePublication: MavenPublication.() -> Unit = {
                 artifactId = "zip-android"
 
-                artifact(tasks["bundleLibCompileToJarRelease"].outputs.files.singleFile)
-                artifact(tasks["bundleReleaseAar"])
                 artifact(tasks["sourcesJar"])
                 artifact(tasks["javadocJar"])
+                artifact(tasks["bundleReleaseAar"])
+                artifact(tasks["bundleLibCompileToJarRelease"].outputs.files.singleFile) {
+                    builtBy(tasks["bundleLibCompileToJarRelease"])
+                }
 
                 pom {
                     name.set("zip-android")
