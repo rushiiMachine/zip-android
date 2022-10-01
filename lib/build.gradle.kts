@@ -54,26 +54,92 @@ task<Jar>("sourcesJar") {
 afterEvaluate {
     publishing {
         publications {
-            register("zip-android", MavenPublication::class) {
+            val configureBasePublication: MavenPublication.() -> Unit = {
                 artifactId = "zip-android"
+
                 artifact(tasks["bundleLibCompileToJarRelease"].outputs.files.singleFile)
                 artifact(tasks["bundleReleaseAar"])
                 artifact(tasks["sourcesJar"])
+
+                pom {
+                    name.set("zip-android")
+                    description.set("Native zip library + java interface for android")
+                    url.set("https://github.com/DiamondMiner88/zip-android")
+                    licenses {
+                        license {
+                            name.set("Apache 2.0 license")
+                            url.set("https://github.com/DiamondMiner88/zip-android/blob/master/LICENSE")
+                            comments.set("zip-android, thiserror, jni_fn, jni license")
+                        }
+                        license {
+                            name.set("MIT license")
+                            url.set("https://github.com/zip-rs/zip/blob/master/LICENSE")
+                            comments.set("zip-rs, thiserror, jni_fn, jni license")
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id.set("rushii")
+                            name.set("rushii")
+                            url.set("https://github.com/DiamondMiner88/")
+                            email.set("vdiamond_@outlook.com")
+                        }
+                    }
+
+                    scm {
+                        url.set("https://github.com/DiamondMiner88/zip-android")
+                        connection.set("scm:git:github.com/DiamondMiner88/zip-android.git")
+                        developerConnection.set("scm:git:ssh://github.com/DiamondMiner88/zip-android.git")
+                    }
+                }
+            }
+
+            register("zip-android-amulet", MavenPublication::class) {
+                configureBasePublication(this)
+                groupId = "io.github.diamondminer88"
+            }
+
+            register("zip-android-maven-central", MavenPublication::class) {
+                configureBasePublication(this)
+                groupId = "io.github.diamondminer88"
             }
         }
 
         repositories {
-            val username = System.getenv("MAVEN_USERNAME")
-            val password = System.getenv("MAVEN_PASSWORD")
+            val amuletUsername = System.getenv("AMULET_USERNAME")
+            val amuletPassword = System.getenv("AMULET_PASSWORD")
 
-            if (username == null || password == null)
+            val sonatypeUsername = System.getenv("SONATYPE_USERNAME")
+            val sonatypePassword = System.getenv("SONATYPE_PASSWORD")
+
+            if ((amuletUsername == null || amuletPassword == null) && (sonatypeUsername == null || sonatypePassword == null))
                 mavenLocal()
-            else maven {
-                credentials {
-                    this.username = username
-                    this.password = password
+            else {
+                if (amuletUsername != null && amuletPassword != null) {
+                    maven {
+                        mavenContent {
+                            includeGroup("com.github.diamondminer88")
+                        }
+                        credentials {
+                            this.username = amuletUsername
+                            this.password = amuletPassword
+                        }
+                        setUrl("https://redditvanced.ddns.net/maven/releases")
+                    }
                 }
-                setUrl("https://redditvanced.ddns.net/maven/releases")
+                if (sonatypeUsername != null && sonatypePassword != null) {
+                    maven {
+                        mavenContent {
+                            includeGroup("io.github.diamondminer88")
+                        }
+                        credentials {
+                            this.username = sonatypeUsername
+                            this.password = sonatypePassword
+                        }
+                        setUrl("https://s01.oss.sonatype.org")
+                    }
+                }
             }
         }
     }
