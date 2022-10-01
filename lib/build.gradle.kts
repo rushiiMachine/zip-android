@@ -7,6 +7,7 @@ plugins {
     id("com.android.library")
     id("org.mozilla.rust-android-gradle.rust-android")
     id("maven-publish")
+    id("signing")
 }
 
 android {
@@ -173,5 +174,10 @@ afterEvaluate {
                 }
             }
         }
+    }
+
+    signing {
+        if (project.hasProperty("secretKeyRingFile"))
+            sign(publishing.publications)
     }
 }
