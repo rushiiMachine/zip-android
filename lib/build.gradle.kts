@@ -51,6 +51,33 @@ task<Jar>("sourcesJar") {
     archiveClassifier.set("sources")
 }
 
+task<Javadoc>("javadoc") {
+    source(android.sourceSets.named("main").get().java.srcDirs)
+    options {
+        title = "zip-android $version"
+        windowTitle = "zip-android $version"
+        classpath(android.bootClasspath)
+
+        // Holy fuck Javadoc extension is so shit
+        val customOptionsFile = temporaryDir.resolve("custom_javadoc.options")
+            .also { it.createNewFile() }
+            .also { it.writeText("-Xdoclint:none") }
+
+        optionFiles(customOptionsFile)
+    }
+
+    afterEvaluate {
+        tasks.getByName("javadoc")
+            .let { it as Javadoc }
+            .classpath += files(android.libraryVariants.map { it.javaCompileProvider.get().classpath.files })
+    }
+}
+
+task<Jar>("javadocJar") {
+    from(tasks["javadoc"].outputs)
+    archiveClassifier.set("javadoc")
+}
+
 afterEvaluate {
     publishing {
         publications {
@@ -60,6 +87,7 @@ afterEvaluate {
                 artifact(tasks["bundleLibCompileToJarRelease"].outputs.files.singleFile)
                 artifact(tasks["bundleReleaseAar"])
                 artifact(tasks["sourcesJar"])
+                artifact(tasks["javadocJar"])
 
                 pom {
                     name.set("zip-android")
