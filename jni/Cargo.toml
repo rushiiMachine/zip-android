@@ -7,7 +7,7 @@ edition = "2021"
 crate_type = ["cdylib"]
 
 [dependencies]
-zip = { path = "../zip", features = ["deflate-miniz"], default-features = false }
+zip = { path = "../zip", features = ["deflate-miniz", "bzip2", "zstd"], default-features = false }
 thiserror = "1.0.37"
 jni_fn = "0.1.0"
 jni = "0.19.0"

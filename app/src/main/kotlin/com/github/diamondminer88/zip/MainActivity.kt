@@ -42,11 +42,11 @@ class MainActivity : Activity() {
             zip.setComment("a comment".toByteArray())
             Log.i(TAG, "delete JNI time ${measureNanoTime { zip.deleteEntries("abc.txt") }}ns")
 
-            val text = "hot garbage".toByteArray()
-            zip.writeEntry("compressed.txt", text)
-            zip.writeEntryUncompressed("uncompressed.txt", text)
-            zip.writeAligned("aligned.txt", 4, text)
-            zip.writeUncompressedAligned("uncompressedaligned.txt", 4, text)
+            val bytes = "hot garbage".toByteArray()
+            zip.writeEntry("compressed_unaligned.txt", bytes)
+            zip.writeEntry("uncompressed_unaligned.txt", bytes, ZipCompression.NONE)
+            zip.writeEntry("compressed_aligned.txt", bytes, ZipCompression.DEFLATE, 4)
+            zip.writeEntry("uncompressed_aligned.txt", bytes, ZipCompression.NONE, 4)
         }
 
         ZipReader(zipFile).use { zip ->

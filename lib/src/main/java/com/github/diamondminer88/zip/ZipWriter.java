@@ -73,49 +73,61 @@ public class ZipWriter implements Closeable {
     private native void open(byte[] input);
 
     /**
-     * Set the comment for the zip archive.
-     * @param comment UTF-8 encoded comment (usually)
+     * Sets the comment for the zip archive.
+     * @param comment Comment raw bytes (doesn't have to be UTF-8)
      */
     public native void setComment(byte[] comment);
 
     /**
-     * Create an entry and write bytes to it.
+     * Sets the comment for the zip archive.
+     */
+    public void setComment(String comment) {
+        setComment(comment.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Internal method for writing an entry
+     */
+    private native void writeEntry(String path, byte[] data, int compression, int alignment);
+
+    /**
+     * Create a deflate-compressed unaligned entry and write bytes to it.
      * @param path Path to entry inside the archive
      * @param data Raw data
      */
-    public native void writeEntry(String path, byte[] data);
+    public void writeEntry(String path, byte[] data) {
+        writeEntry(path, data, ZipCompression.DEFLATE.internal, 0);
+    }
 
     /**
-     * Create an entry and write to it.
+     * Create an <b>unaligned</b> entry with specific compression and write bytes to it.
+     * @param path Path to entry inside the archive
+     * @param data Raw data
+     * @param compression The target compression for the entry
+     */
+    public void writeEntry(String path, byte[] data, ZipCompression compression) {
+        writeEntry(path, data, compression.internal, 0);
+    }
+
+    /**
+     * Create an aligned entry with specific compression.
+     * @param path Path to entry inside the archive
+     * @param data Raw data
+     * @param compression The target compression for the entry
+     * @param alignment The target alignment for the entry data from the start of the zip. This is commonly used for zip-aligning .so's inside apks so extractNativeLibs can be set to false.
+     */
+    public void writeEntry(String path, byte[] data, ZipCompression compression, int alignment) {
+        writeEntry(path, data, compression.internal, alignment);
+    }
+
+    /**
+     * Create a deflate-compressed unaligned entry and write to it.
      * @param path    Path to entry inside the archive
      * @param content Content that will be encoded as UTF-8
      */
     public void writeEntry(String path, String content) {
-        writeEntry(path, content.getBytes(StandardCharsets.UTF_8));
+        writeEntry(path, content.getBytes(StandardCharsets.UTF_8), ZipCompression.DEFLATE.internal, 0);
     }
-
-    /**
-     * Create an entry and write bytes to it without compressing.
-     * @param path Path to entry inside the archive
-     * @param data Raw data
-     */
-    public native void writeEntryUncompressed(String path, byte[] data);
-
-    /**
-     * Create an aligned entry and write bytes to it without compressing.
-     * @param path      Path to entry inside the archive
-     * @param alignment Byte alignment
-     * @param data      Raw data
-     */
-    public native void writeUncompressedAligned(String path, short alignment, byte[] data);
-
-    /**
-     * Create an aligned entry and write bytes to it.
-     * @param path      Path to entry inside the archive
-     * @param alignment Byte alignment
-     * @param data      Raw data
-     */
-    public native void writeAligned(String path, short alignment, byte[] data);
 
     /**
      * Create a directory in the archive.
