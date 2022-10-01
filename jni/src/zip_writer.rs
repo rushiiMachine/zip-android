@@ -1,8 +1,6 @@
-use std::{
-    fs::{File, OpenOptions},
-    io::{Cursor, Seek, SeekFrom, Write},
-    path::Path,
-};
+use std::fs::{File, OpenOptions};
+use std::io::Write;
+use std::path::Path;
 
 use jni::{
     JNIEnv,
@@ -11,7 +9,9 @@ use jni::{
 };
 use jni::sys::jshort;
 use jni_fn::jni_fn;
-use zip::{CompressionMethod, ZipArchive, ZipWriter};
+
+use zip::{CompressionMethod, ZipWriter};
+use zip::result::ZipError;
 use zip::write::FileOptions;
 
 use crate::cache;
@@ -207,47 +207,33 @@ pub fn close(
 pub fn deleteEntries(
     env: JNIEnv,
     class: JClass,
-    jignored: jobjectArray,
+    entries: jobjectArray,
 ) {
-    let arr_length = env.get_array_length(jignored).unwrap() as usize;
-    let ignored: Vec<String> = (0..arr_length)
+    let entries_len = env.get_array_length(entries).unwrap() as usize;
+    let entries: Vec<String> = (0..entries_len)
         .map(|i| {
-            let obj = env.get_object_array_element(jignored, i as jsize).unwrap();
+            let obj = env.get_object_array_element(entries, i as jsize).unwrap();
             env.get_string(obj.into()).unwrap().into()
         })
         .collect();
 
-    let mut old_writer = take_writer(&env, class.clone());
-    let old_file = old_writer.finish().unwrap();
-    drop(old_writer);
+    let mut writer = get_writer(&env, class);
 
-    let mut reader = ZipArchive::new(old_file).unwrap();
-    let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
+    for name in entries {
+        let result = writer.remove_file(name);
 
-    writer.set_raw_comment(reader.comment().into());
-
-    for i in 0..reader.len() {
-        let entry = reader.by_index_raw(i).unwrap();
-        if !ignored.contains(&entry.name().to_string()) {
-            writer.raw_copy_file(entry).unwrap();
+        if let Err(err) = result {
+            match err {
+                ZipError::FileNotFound => {
+                    env.throw("Cannot find the target entry to delete!").unwrap();
+                }
+                ZipError::Io(_) => {
+                    env.throw("Cannot delete file while writing currently writing a new file!").unwrap();
+                }
+                _ => {
+                    env.throw("Unknown error trying to delete entry!").unwrap();
+                }
+            }
         }
     }
-
-    let bytes = writer.finish().unwrap().into_inner();
-    drop(writer);
-
-    let mut file = reader.into_inner();
-    file.set_len(0).unwrap();
-    file.seek(SeekFrom::Start(0)).unwrap();
-    file.write_all(bytes.as_slice()).unwrap();
-    drop(bytes);
-
-    let archive = match ZipWriter::new_append(file) {
-        Ok(a) => a,
-        Err(e) => {
-            env.throw(format!("Failed to open archive after deleting entries: {:?}", e)).unwrap();
-            return;
-        }
-    };
-    set_writer(&env, class, archive);
 }

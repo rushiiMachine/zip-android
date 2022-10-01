@@ -33,8 +33,8 @@ class MainActivity : AppCompatActivity() {
             Log.i(TAG, "Entries: ${zip.entryNames.joinToString()}")
 
             zip.forEach {
-                Log.i(TAG, "Entry: ${it.name} Size: ${it.size} Modified: ${it.lastModified} " +
-                        "JNI time: ${measureNanoTime { it.size }}ns")
+                Log.i(TAG, "Entry: ${it.name} Size: ${it.size} Modified: ${it.lastModified} ")
+                Log.i(TAG, "entry.size JNI access time: JNI time: ${measureNanoTime { it.size }}ns")
                 if (!it.isDir) {
                     Log.i(TAG, "Content: ${it.read().decodeToString()}")
                 }
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
 
         ZipWriter(zipFile, true).use { zip ->
             zip.setComment("a comment".toByteArray())
-            zip.deleteEntries("abc.txt")
+            Log.i(TAG, "delete JNI time ${measureNanoTime { zip.deleteEntries("abc.txt") }}ns")
 
             val text = "hot garbage".toByteArray()
             zip.writeEntry("compressed.txt", text)
