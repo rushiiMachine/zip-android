@@ -10,6 +10,15 @@ plugins {
     id("signing")
 }
 
+repositories {
+    mavenCentral()
+    google()
+}
+
+dependencies {
+    compileOnly("org.jetbrains:annotations:23.0.0")
+}
+
 android {
     namespace = "com.github.diamondminer88.zip.zpp"
     compileSdk = 33
@@ -34,18 +43,14 @@ cargo {
     targets = listOf("arm", "arm64", "x86", "x86_64")
 }
 
-tasks.whenTaskAdded {
-    if (listOf("mergeDebugJniLibFolders", "mergeReleaseJniLibFolders").contains(this.name))
-        dependsOn("cargoBuild")
+afterEvaluate {
+    tasks["mergeDebugJniLibFolders"].dependsOn("cargoBuild")
+    tasks["mergeReleaseJniLibFolders"].dependsOn("cargoBuild")
 }
 
-repositories {
-    mavenCentral()
-    google()
-}
-
-dependencies {
-    compileOnly("org.jetbrains:annotations:23.0.0")
+tasks.getByName<Delete>("clean") {
+    delete("../jni/target")
+    delete("../zip/target")
 }
 
 task<Jar>("sourcesJar") {
@@ -69,15 +74,20 @@ task<Javadoc>("javadoc") {
     }
 
     afterEvaluate {
-        tasks.getByName("javadoc")
-            .let { it as Javadoc }
-            .classpath += files(android.libraryVariants.map { it.javaCompileProvider.get().classpath.files })
+        val libPaths = files(android.libraryVariants.map { it.javaCompileProvider.get().classpath.files })
+        tasks.getByName<Javadoc>("javadoc")
+            .classpath += libPaths
     }
 }
 
 task<Jar>("javadocJar") {
     from(tasks["javadoc"].outputs)
     archiveClassifier.set("javadoc")
+}
+
+signing {
+    if (project.hasProperty("secretKeyRingFile"))
+        sign(publishing.publications)
 }
 
 afterEvaluate {
@@ -174,10 +184,5 @@ afterEvaluate {
                 }
             }
         }
-    }
-
-    signing {
-        if (project.hasProperty("secretKeyRingFile"))
-            sign(publishing.publications)
     }
 }
