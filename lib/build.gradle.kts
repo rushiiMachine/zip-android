@@ -10,6 +10,7 @@ plugins {
 }
 
 android {
+    namespace = "com.github.diamondminer88.zip.zpp"
     compileSdk = 33
 
     defaultConfig {
@@ -125,7 +126,7 @@ afterEvaluate {
 
             register("zip-android-amulet", MavenPublication::class) {
                 configureBasePublication(this)
-                groupId = "io.github.diamondminer88"
+                groupId = "com.github.diamondminer88"
             }
 
             register("zip-android-maven-central", MavenPublication::class) {

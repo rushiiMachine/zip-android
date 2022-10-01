@@ -1,4 +1,4 @@
-package com.github.diamondminer88.app
+package com.github.diamondminer88.zip
 
 import android.Manifest
 import android.app.Activity
@@ -7,8 +7,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import com.github.diamondminer88.zip.ZipReader
-import com.github.diamondminer88.zip.ZipWriter
 import java.io.File
 import kotlin.system.measureNanoTime
 

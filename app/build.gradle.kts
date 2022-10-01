@@ -9,6 +9,7 @@ repositories {
 }
 
 android {
+    namespace = "com.github.diamondminer88.zip"
     compileSdk = 33
 
     defaultConfig {
