@@ -84,4 +84,15 @@ public class ZipEntry {
      * Reads this file entry's data (decompressed or not depending on how this entry was opened)
      */
     public native byte[] read();
+
+    /**
+     * Drops the ZipFile struct internally to prevent a memory leak.
+     */
+    private native void _finalize();
+
+    @Override
+    protected void finalize() throws Throwable {
+        _finalize();
+        super.finalize();
+    }
 }

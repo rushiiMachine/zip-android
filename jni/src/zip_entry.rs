@@ -8,15 +8,20 @@ use jni::{
     sys::{jboolean, jbyteArray, jint, jlong, jstring},
 };
 use jni_fn::jni_fn;
+
 use zip::read::ZipFile;
 
 use crate::{
     cache,
-    interop::{get_field, ReentrantReference},
+    interop::{get_field, ReentrantReference, take_field},
 };
 
 fn get_entry<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ReentrantReference<'a, ZipFile<'static>> {
     get_field(&env, obj, cache::fld_zipentry_ptr()).unwrap()
+}
+
+fn take_entry<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ZipFile<'static> {
+    take_field(&env, obj, cache::fld_zipentry_ptr()).unwrap()
 }
 
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
@@ -134,4 +139,12 @@ pub fn read(
     entry.read_to_end(&mut data).unwrap();
 
     env.byte_array_from_slice(&data).unwrap()
+}
+
+#[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
+pub fn _finalize(
+    env: JNIEnv,
+    class: JClass,
+) {
+    take_entry(&env, class);
 }
