@@ -202,6 +202,29 @@ pub fn close(
     }
 }
 
+#[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
+pub fn deleteEntry(
+    env: JNIEnv,
+    class: JClass,
+    path: JString,
+) {
+    let path = env.get_string(path).unwrap();
+    let mut writer = get_writer(&env, class);
+
+    if let Err(err) = writer.remove_file(path) {
+        match err {
+            ZipError::FileNotFound => {
+                env.throw("Cannot find the target entry to delete!").unwrap();
+            }
+            ZipError::Io(_) => {
+                env.throw("Cannot delete a file while writing currently writing a new file!").unwrap();
+            }
+            _ => {
+                env.throw("Unknown error trying to delete entry!").unwrap();
+            }
+        }
+    }
+}
 
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
 pub fn deleteEntries(
@@ -220,15 +243,13 @@ pub fn deleteEntries(
     let mut writer = get_writer(&env, class);
 
     for name in entries {
-        let result = writer.remove_file(name);
-
-        if let Err(err) = result {
+        if let Err(err) = writer.remove_file(name) {
             match err {
                 ZipError::FileNotFound => {
                     env.throw("Cannot find the target entry to delete!").unwrap();
                 }
                 ZipError::Io(_) => {
-                    env.throw("Cannot delete file while writing currently writing a new file!").unwrap();
+                    env.throw("Cannot delete a file while writing currently writing a new file!").unwrap();
                 }
                 _ => {
                     env.throw("Unknown error trying to delete entry!").unwrap();

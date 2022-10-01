@@ -1,7 +1,5 @@
 package com.github.diamondminer88.zip;
 
-import org.jetbrains.annotations.ApiStatus.Internal;
-
 import java.io.Closeable;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -16,7 +14,6 @@ public class ZipWriter implements Closeable {
     /**
      * Internal pointer to ZipWriter struct
      */
-    @Internal
     @SuppressWarnings("FieldMayBeFinal")
     private long ptr = 0;
 
@@ -127,22 +124,24 @@ public class ZipWriter implements Closeable {
     public native void writeDir(String path);
 
     /**
-     * Delete entries from this archive.
-     * This creates a new archive under the hood <i>for now</i>, until zip-rs maintainers fix.
-     * The archive will be saved once to disk before this operation occurs.
-     * @param entries Target paths of entries
+     * Delete an entry from this archive.
+     * @param path Path to entry in the archive.
      */
-    public native void deleteEntries(String... entries);
+    public native void deleteEntry(String path);
 
     /**
      * Delete entries from this archive.
-     * This creates a new archive under the hood <i>for now</i>, until zip-rs maintainers fix.
-     * The archive will be saved once to disk before this operation occurs.
-     * @param entries Target paths of entries
+     * @param paths Target paths of entries
      */
-    public void deleteEntries(Collection<String> entries) {
-        var entriesArr = new String[entries.size()];
-        entries.toArray(entriesArr);
+    public native void deleteEntries(String... paths);
+
+    /**
+     * Delete entries from this archive.
+     * @param paths Target paths of entries
+     */
+    public void deleteEntries(Collection<String> paths) {
+        var entriesArr = new String[paths.size()];
+        paths.toArray(entriesArr);
 
         deleteEntries(entriesArr);
     }
