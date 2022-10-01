@@ -43,9 +43,16 @@ public class ZipEntry {
     public native long getLastModified();
 
     /**
-     * Returns whether the file is a directory.
+     * Whether the entry is a directory.
      */
     public native boolean isDir();
+
+    /**
+     * Whether the entry is a file.
+     */
+    public boolean isFile() {
+        return !isDir();
+    }
 
     /**
      * Get the unix mode for this file.
