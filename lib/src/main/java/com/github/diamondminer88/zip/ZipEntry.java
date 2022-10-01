@@ -81,6 +81,18 @@ public class ZipEntry {
     public native long getCompressedSize();
 
     /**
+     * Internal method for getting the int value representing values in {@link ZipCompression}.
+     */
+    private native int _getCompression();
+
+    /**
+     * Get the compression type that this entry is compressed with.
+     */
+    public ZipCompression getCompression() {
+        return ZipCompression.fromInternal(_getCompression());
+    }
+
+    /**
      * Reads this file entry's data (decompressed or not depending on how this entry was opened)
      */
     public native byte[] read();

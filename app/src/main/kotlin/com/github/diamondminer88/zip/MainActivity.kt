@@ -53,8 +53,9 @@ class MainActivity : Activity() {
             Log.i(TAG, "Modified zip comment: ${zip.comment}")
             Log.i(TAG, "Modified zip entries: ${zip.entryNames.joinToString()}")
 
-            val content = zip.openEntry("compressed.txt")?.read()?.decodeToString()
-            Log.i(TAG, "Created entry content: $content")
+            val entry = zip.openEntry("compressed_unaligned.txt")!!
+            val content = entry.read()?.decodeToString()
+            Log.i(TAG, "compressed.txt compression: ${entry.compression.name} content: $content")
         }
     }
 

@@ -9,6 +9,7 @@ use jni::{
 };
 use jni_fn::jni_fn;
 
+use zip::CompressionMethod;
 use zip::read::ZipFile;
 
 use crate::{
@@ -121,6 +122,23 @@ pub fn getCompressedSize(
 ) -> jlong {
     let entry = get_entry(&env, class);
     entry.compressed_size() as i64
+}
+
+#[allow(deprecated)]
+#[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
+pub fn _getCompression(
+    env: JNIEnv,
+    class: JClass,
+) -> jlong {
+    let entry = get_entry(&env, class);
+    match entry.compression() {
+        CompressionMethod::Unsupported(_) => -1,
+        CompressionMethod::Stored => 0,
+        CompressionMethod::Deflated => 1,
+        CompressionMethod::Bzip2 => 2,
+        CompressionMethod::Zstd => 3,
+        _ => -1,
+    }
 }
 
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
