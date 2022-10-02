@@ -13,9 +13,9 @@ on:
 # Required actions secrets:
 # AMULET_USERNAME: amulet maven repo username
 # AMULET_PASSWORD: amulet maven repo password
-# SONATYPE_USERNAME: sonatype maven repo username
-# SONATYPE_PASSWORD: sonatype maven repo password
-# GPG_KEY: base64 encoded gpg signing key (gpg --export-secret-keys YOUR_ID_HERE | base64 > private.key)
+# SONATYPE_USERNAME: sonatype staging repo user token username
+# SONATYPE_PASSWORD: sonatype staging repo user token password
+# GPG_KEY: base64 encoded gpg signing key (gpg --export-secret-keys <KEY_IDENTIFIER> | base64)
 # GPG_KEY_ID: last 8 chars of fingerprint (gpg --list-keys --keyid-format short)
 # GPG_KEY_PASSWORD: password for key with that id
 

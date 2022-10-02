@@ -86,7 +86,7 @@ task<Jar>("javadocJar") {
 }
 
 signing {
-    if (project.hasProperty("secretKeyRingFile"))
+    if (findProperty("signing.secretKeyRingFile") != null)
         sign(publishing.publications)
 }
 
