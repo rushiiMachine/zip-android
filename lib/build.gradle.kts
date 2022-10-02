@@ -1,7 +1,7 @@
 import org.gradle.kotlin.dsl.support.listFilesOrdered
 
 group = "com.github.diamondminer88"
-version = "1.1.0"
+version = "2.0.0"
 
 plugins {
     id("com.android.library")
@@ -137,52 +137,56 @@ afterEvaluate {
                 }
             }
 
-            register("zip-android-amulet", MavenPublication::class) {
+            register("libziprs-amulet", MavenPublication::class) {
                 configureBasePublication(this)
                 groupId = "com.github.diamondminer88"
             }
 
-            register("zip-android-maven-central", MavenPublication::class) {
+            register("libziprs-sonatype", MavenPublication::class) {
                 configureBasePublication(this)
                 groupId = "io.github.diamondminer88"
             }
         }
 
         repositories {
+            val amuletEnabled = (System.getenv("AMULET_ENABLED") ?: "false").toBoolean()
             val amuletUsername = System.getenv("AMULET_USERNAME")
             val amuletPassword = System.getenv("AMULET_PASSWORD")
 
             val sonatypeUsername = System.getenv("SONATYPE_USERNAME")
             val sonatypePassword = System.getenv("SONATYPE_PASSWORD")
 
-            if ((amuletUsername == null || amuletPassword == null) && (sonatypeUsername == null || sonatypePassword == null))
+            if ((!amuletEnabled || amuletUsername == null || amuletPassword == null) && (sonatypeUsername == null || sonatypePassword == null))
                 mavenLocal()
             else {
-                if (amuletUsername != null && amuletPassword != null) {
+                if (amuletEnabled && amuletUsername != null && amuletPassword != null) {
                     maven {
-                        mavenContent {
-                            includeGroup("com.github.diamondminer88")
-                        }
+                        name = "amulet"
                         credentials {
-                            this.username = amuletUsername
-                            this.password = amuletPassword
+                            username = amuletUsername
+                            password = amuletPassword
                         }
                         setUrl("https://redditvanced.ddns.net/maven/releases")
                     }
                 }
                 if (sonatypeUsername != null && sonatypePassword != null) {
                     maven {
-                        mavenContent {
-                            includeGroup("io.github.diamondminer88")
-                        }
+                        name = "sonatype"
                         credentials {
-                            this.username = sonatypeUsername
-                            this.password = sonatypePassword
+                            username = sonatypeUsername
+                            password = sonatypePassword
                         }
-                        setUrl("https://s01.oss.sonatype.org")
+                        setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
                     }
                 }
             }
+        }
+    }
+
+    tasks.withType<PublishToMavenRepository> {
+        if (!publication.name.endsWith(repository.name)) {
+            enabled = false
+            setGroup(null)
         }
     }
 }
