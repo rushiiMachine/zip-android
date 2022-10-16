@@ -13,7 +13,7 @@ android {
     compileSdk = 33
 
     defaultConfig {
-        applicationId = "com.github.diamondminer88.zip.app"
+        applicationId = "com.github.diamondminer88.zip"
         minSdk = 24
         targetSdk = 33
         versionCode = 1
@@ -30,6 +30,6 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.9.0")
     implementation(project(":lib"))
+    implementation("androidx.core:core-ktx:1.9.0")
 }

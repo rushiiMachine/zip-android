@@ -2,4 +2,4 @@
 * text=auto
 
 # Ignore copied modified zip lib
-zip linguist-vendored
+zip/** linguist-vendored
