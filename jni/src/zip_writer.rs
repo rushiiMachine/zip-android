@@ -180,9 +180,6 @@ pub fn deleteEntry(
             ZipError::FileNotFound => {
                 env.throw("Cannot find the target entry to delete!").unwrap();
             }
-            ZipError::Io(_) => {
-                env.throw("Cannot delete a file while writing currently writing a new file!").unwrap();
-            }
             _ => {
                 env.throw("Unknown error trying to delete entry!").unwrap();
             }
@@ -211,9 +208,6 @@ pub fn deleteEntries(
             match err {
                 ZipError::FileNotFound => {
                     env.throw("Cannot find the target entry to delete!").unwrap();
-                }
-                ZipError::Io(_) => {
-                    env.throw("Cannot delete a file while writing currently writing a new file!").unwrap();
                 }
                 _ => {
                     env.throw("Unknown error trying to delete entry!").unwrap();

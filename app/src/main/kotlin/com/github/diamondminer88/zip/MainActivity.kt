@@ -30,7 +30,10 @@ class MainActivity : Activity() {
             Log.i(TAG, "Entries: ${zip.entryNames.joinToString()}")
 
             zip.forEach {
-                Log.i(TAG, "Entry: ${it.name} Size: ${it.size} Modified: ${it.lastModified} ")
+                Log.i(
+                    TAG,
+                    "Entry: ${it.name} Compressed Size: ${it.compressedSize} Size: ${it.size} Modified: ${it.lastModified} "
+                )
                 Log.i(TAG, "entry.size JNI access time: JNI time: ${measureNanoTime { it.size }}ns")
                 if (!it.isDir) {
                     Log.i(TAG, "Content: ${it.read().decodeToString()}")
@@ -40,7 +43,7 @@ class MainActivity : Activity() {
 
         ZipWriter(zipFile, true).use { zip ->
             zip.setComment("a comment".toByteArray())
-            Log.i(TAG, "delete JNI time ${measureNanoTime { zip.deleteEntries("abc.txt") }}ns")
+            Log.i(TAG, "Delete JNI time ${measureNanoTime { zip.deleteEntry("abc.txt") }}ns")
 
             val bytes = "hot garbage".toByteArray()
             zip.writeEntry("compressed_unaligned.txt", bytes)
@@ -56,6 +59,8 @@ class MainActivity : Activity() {
             val entry = zip.openEntry("compressed_unaligned.txt")!!
             val content = entry.read()?.decodeToString()
             Log.i(TAG, "compressed.txt compression: ${entry.compression.name} content: $content")
+
+            zip.forEach { println("Entry: ${it.name} compressed size: ${it.compressedSize} raw size: ${it.size}") }
         }
     }
 
