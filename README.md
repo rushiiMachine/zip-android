@@ -17,12 +17,12 @@ repositories {
 
 dependencies {
     // Maven central (recommended)
-    implementation("io.github.diamondminer88:zip-android:2.0.0@aar")
+    implementation("io.github.diamondminer88:zip-android:2.1.0@aar")
 
     // ---------OR---------
     
     // Amulet maven
-    implementation("com.github.diamondminer88:zip-android:2.0.0@aar")
+    implementation("com.github.diamondminer88:zip-android:2.1.0@aar")
 }
 ```
 
