@@ -149,17 +149,16 @@ afterEvaluate {
         }
 
         repositories {
-            val amuletEnabled = (System.getenv("AMULET_ENABLED") ?: "false").toBoolean()
             val amuletUsername = System.getenv("AMULET_USERNAME")
             val amuletPassword = System.getenv("AMULET_PASSWORD")
 
             val sonatypeUsername = System.getenv("SONATYPE_USERNAME")
             val sonatypePassword = System.getenv("SONATYPE_PASSWORD")
 
-            if ((!amuletEnabled || amuletUsername == null || amuletPassword == null) && (sonatypeUsername == null || sonatypePassword == null))
+            if ((amuletUsername == null || amuletPassword == null) && (sonatypeUsername == null || sonatypePassword == null))
                 mavenLocal()
             else {
-                if (amuletEnabled && amuletUsername != null && amuletPassword != null) {
+                if (amuletUsername != null && amuletPassword != null) {
                     maven {
                         name = "amulet"
                         credentials {
