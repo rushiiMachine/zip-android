@@ -139,7 +139,16 @@ public class ZipWriter implements Closeable {
      * Delete an entry from this archive.
      * @param path Path to entry in the archive.
      */
-    public native void deleteEntry(String path);
+    public void deleteEntry(String path) {
+        deleteEntry(path, false);
+    }
+
+    /**
+     * Delete an entry from this archive.
+     * @param path Path to entry in the archive.
+     * @param fillVoid Keep other entries' alignment by only removing the entry from the central directory and replacing the file content with nulls.
+     */
+    public native void deleteEntry(String path, boolean fillVoid);
 
     /**
      * Delete entries from this archive.

@@ -52,7 +52,9 @@ ZipWriter(zipFile).use { zip ->
     zip.deleteEntries("abc.txt", "guh.txt")
     zip.deleteEntry("husk.txt")
 
-    // Page-aligned (4096 byte) uncompressed entry (useful for writing zip aligned .so's)
+    // Delete entry from central dir and keep the alignment (useful for writing zip aligned .so's) 
+    zip.deleteEntry("lib.so", true);
+    // Write page-aligned (4096 byte) uncompressed entry (useful for writing zip aligned .so's)
     zip.writeEntry("lib.so", bytes, ZipCompression.NONE, 4096)
 }
 ```

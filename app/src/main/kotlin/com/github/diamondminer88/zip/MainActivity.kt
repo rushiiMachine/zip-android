@@ -44,6 +44,7 @@ class MainActivity : Activity() {
         ZipWriter(zipFile, true).use { zip ->
             zip.setComment("a comment".toByteArray())
             Log.i(TAG, "Delete JNI time ${measureNanoTime { zip.deleteEntry("abc.txt") }}ns")
+            zip.deleteEntry("abc/abc.txt", true)
 
             val bytes = "hot garbage".toByteArray()
             zip.writeEntry("compressed_unaligned.txt", bytes)

@@ -171,11 +171,13 @@ pub fn deleteEntry(
     env: JNIEnv,
     class: JClass,
     path: JString,
+    fill_void: jboolean,
 ) {
     let path = env.get_string(path).unwrap();
+    let fill_void = fill_void == 1;
     let mut writer = get_writer(&env, class);
 
-    if let Err(err) = writer.remove_file(path) {
+    if let Err(err) = writer.remove_file(path, fill_void) {
         match err {
             ZipError::FileNotFound => {
                 env.throw("Cannot find the target entry to delete!").unwrap();
@@ -204,7 +206,7 @@ pub fn deleteEntries(
     let mut writer = get_writer(&env, class);
 
     for name in entries {
-        if let Err(err) = writer.remove_file(name) {
+        if let Err(err) = writer.remove_file(name, false) {
             match err {
                 ZipError::FileNotFound => {
                     env.throw("Cannot find the target entry to delete!").unwrap();
