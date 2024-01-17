@@ -165,11 +165,13 @@ afterEvaluate {
         }
     }
 
-    signing {
-        if (System.getenv("SONATYPE_USERNAME") != null) {
-            if (findProperty("signing.secretKeyRingFile") == null)
-                throw Error("no gpg key info found for a release build")
-
+    if (System.getenv("SONATYPE_USERNAME") != null) {
+        signing {
+            useInMemoryPgpKeys(
+                System.getenv("SIGNING_KEY_ID"),
+                System.getenv("SIGNING_KEY"),
+                System.getenv("SIGNING_PASSWORD"),
+            )
             sign(publishing.publications)
         }
     }
