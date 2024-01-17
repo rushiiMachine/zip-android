@@ -20,8 +20,7 @@ public class ZipReader implements Closeable, Iterable<ZipEntry> {
      * Internal pointer to ZipArchive struct
      */
     @Internal
-    @SuppressWarnings("FieldMayBeFinal")
-    private long ptr = 0;
+    private final long ptr = 0;
 
     /**
      * Open a zip file with readonly operations

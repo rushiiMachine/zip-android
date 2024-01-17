@@ -14,8 +14,7 @@ public class ZipWriter implements Closeable {
     /**
      * Internal pointer to ZipWriter struct
      */
-    @SuppressWarnings("FieldMayBeFinal")
-    private long ptr = 0;
+    private final long ptr = 0;
 
     /**
      * Creates an archive to write to. This overwrites any existing archive.

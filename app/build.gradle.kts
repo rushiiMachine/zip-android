@@ -20,6 +20,13 @@ android {
         versionName = "1.0.0"
     }
 
+    buildTypes {
+        named("debug") {
+            isMinifyEnabled = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
