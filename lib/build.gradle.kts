@@ -99,6 +99,7 @@ signing {
         sign(publishing.publications)
 }
 
+// Must be after evaluation to get the bundleReleaseAar artifact
 afterEvaluate {
     publishing {
         publications {
@@ -163,13 +164,6 @@ afterEvaluate {
                     setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
                 }
             }
-        }
-    }
-
-    tasks.withType<PublishToMavenRepository> {
-        if (!publication.name.endsWith(repository.name)) {
-            enabled = false
-            setGroup(null)
         }
     }
 }
