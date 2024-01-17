@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-    implementation("io.github.diamondminer88:zip-android:2.1.0@aar")
+    implementation("io.github.diamondminer88:zip-android:2.1.1@aar")
 }
 ```
 
