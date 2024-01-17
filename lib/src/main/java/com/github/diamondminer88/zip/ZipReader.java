@@ -99,6 +99,15 @@ public class ZipReader implements Closeable, Iterable<ZipEntry> {
     }
 
     /**
+     * Loop over all the entries within this zip.
+     * <b>If you are trying to loop over names, use {@link ZipReader#getEntryNames()} instead.</b>
+     * @return {@link Iterator} on every zip entry.
+     */
+    public Iterator<ZipEntry> getEntries() {
+        return iterator();
+    }
+
+    /**
      * Iterate over all the entries contained in this archive.
      * Opens entry with decompressing.
      */

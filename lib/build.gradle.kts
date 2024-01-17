@@ -1,42 +1,15 @@
+@file:Suppress("UnstableApiUsage")
+
+import org.gradle.kotlin.dsl.support.listFilesOrdered
+
 group = "com.github.diamondminer88"
-version = "1.0.0"
+version = "2.1.1"
 
 plugins {
     id("com.android.library")
     id("org.mozilla.rust-android-gradle.rust-android")
     id("maven-publish")
-}
-
-android {
-    compileSdk = 31
-
-    defaultConfig {
-        minSdk = 21
-        targetSdk = 29
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-}
-
-cargo {
-    module = "./rust"
-    profile = "release"
-    libname = "ziprs"
-    targets = listOf("arm", "arm64", "x86", "x86_64")
-}
-
-tasks.whenTaskAdded {
-    if (listOf("mergeDebugJniLibFolders", "mergeReleaseJniLibFolders").contains(this.name))
-        dependsOn("cargoBuild")
+    id("signing")
 }
 
 repositories {
@@ -48,9 +21,82 @@ dependencies {
     compileOnly("org.jetbrains:annotations:23.0.0")
 }
 
+android {
+    namespace = "com.github.diamondminer88.zip"
+    compileSdk = 33
+
+    defaultConfig {
+        minSdk = 21
+        targetSdk = 33
+
+        consumerProguardFile("consumer-rules.pro")
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    buildFeatures {
+        buildConfig = false
+        resValues = false
+    }
+
+    ndkVersion = sdkDirectory.resolve("ndk").listFilesOrdered().last().name
+}
+
+cargo {
+    module = "../jni"
+    profile = "release"
+    libname = "ziprs"
+    targets = listOf("arm", "arm64", "x86", "x86_64")
+}
+
+afterEvaluate {
+    tasks["mergeDebugJniLibFolders"].dependsOn("cargoBuild")
+    tasks["mergeReleaseJniLibFolders"].dependsOn("cargoBuild")
+}
+
+tasks.getByName<Delete>("clean") {
+    delete("../jni/target")
+    delete("../zip/target")
+}
+
 task<Jar>("sourcesJar") {
     from(android.sourceSets.named("main").get().java.srcDirs)
     archiveClassifier.set("sources")
+}
+
+task<Javadoc>("javadoc") {
+    source(android.sourceSets.named("main").get().java.srcDirs)
+    options {
+        title = "zip-android $version"
+        windowTitle = "zip-android $version"
+        classpath(android.bootClasspath)
+
+        // Holy fuck Javadoc extension is so shit
+        val customOptionsFile = temporaryDir.resolve("custom_javadoc.options")
+            .also { it.createNewFile() }
+            .also { it.writeText("-Xdoclint:none") }
+
+        optionFiles(customOptionsFile)
+    }
+
+    afterEvaluate {
+        val libPaths = files(android.libraryVariants.map { it.javaCompileProvider.get().classpath.files })
+        tasks.getByName<Javadoc>("javadoc")
+            .classpath += libPaths
+    }
+}
+
+task<Jar>("javadocJar") {
+    from(tasks["javadoc"].outputs)
+    archiveClassifier.set("javadoc")
+}
+
+signing {
+    if (findProperty("signing.secretKeyRingFile") != null)
+        sign(publishing.publications)
 }
 
 afterEvaluate {
@@ -58,25 +104,72 @@ afterEvaluate {
         publications {
             register("zip-android", MavenPublication::class) {
                 artifactId = "zip-android"
-                artifact(tasks["bundleLibCompileToJarRelease"].outputs.files.singleFile)
-                artifact(tasks["bundleReleaseAar"])
+                groupId = "io.github.diamondminer88"
+
                 artifact(tasks["sourcesJar"])
+                artifact(tasks["javadocJar"])
+                artifact(tasks["bundleReleaseAar"])
+                artifact(tasks["bundleLibCompileToJarRelease"].outputs.files.singleFile) {
+                    builtBy(tasks["bundleLibCompileToJarRelease"])
+                }
+
+                pom {
+                    name.set("zip-android")
+                    description.set("Native zip library + java interface for android")
+                    url.set("https://github.com/rushiiMachine/zip-android")
+                    licenses {
+                        license {
+                            name.set("Apache 2.0 license")
+                            url.set("https://github.com/rushiiMachine/zip-android/blob/master/LICENSE")
+                            comments.set("zip-android, thiserror, jni_fn, jni license")
+                        }
+                        license {
+                            name.set("MIT license")
+                            url.set("https://github.com/zip-rs/zip/blob/master/LICENSE")
+                            comments.set("zip-rs, thiserror, jni_fn, jni license")
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id.set("rushii")
+                            name.set("rushii")
+                            url.set("https://github.com/rushiiMachine/")
+                        }
+                    }
+
+                    scm {
+                        url.set("https://github.com/rushiiMachine/zip-android")
+                        connection.set("scm:git:github.com/rushiiMachine/zip-android.git")
+                        developerConnection.set("scm:git:ssh://github.com/rushiiMachine/zip-android.git")
+                    }
+                }
             }
         }
 
         repositories {
-            val username = System.getenv("MAVEN_USERNAME")
-            val password = System.getenv("MAVEN_PASSWORD")
+            val sonatypeUsername = System.getenv("SONATYPE_USERNAME")
+            val sonatypePassword = System.getenv("SONATYPE_PASSWORD")
 
-            if (username == null || password == null)
+            if (sonatypeUsername == null || sonatypePassword == null)
                 mavenLocal()
-            else maven {
-                credentials {
-                    this.username = username
-                    this.password = password
+            else {
+                maven {
+                    name = "sonatype"
+                    credentials {
+                        username = sonatypeUsername
+                        password = sonatypePassword
+                    }
+                    setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
                 }
-                setUrl("https://redditvanced.ddns.net/maven/releases")
             }
+        }
+    }
+
+    tasks.withType<PublishToMavenRepository> {
+        if (!publication.name.endsWith(repository.name)) {
+            enabled = false
+            setGroup(null)
         }
     }
 }

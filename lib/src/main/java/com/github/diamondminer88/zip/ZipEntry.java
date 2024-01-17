@@ -43,9 +43,16 @@ public class ZipEntry {
     public native long getLastModified();
 
     /**
-     * Returns whether the file is a directory.
+     * Whether the entry is a directory.
      */
     public native boolean isDir();
+
+    /**
+     * Whether the entry is a file.
+     */
+    public boolean isFile() {
+        return !isDir();
+    }
 
     /**
      * Get the unix mode for this file.
@@ -74,7 +81,30 @@ public class ZipEntry {
     public native long getCompressedSize();
 
     /**
+     * Internal method for getting the int value representing values in {@link ZipCompression}.
+     */
+    private native int _getCompression();
+
+    /**
+     * Get the compression type that this entry is compressed with.
+     */
+    public ZipCompression getCompression() {
+        return ZipCompression.fromInternal(_getCompression());
+    }
+
+    /**
      * Reads this file entry's data (decompressed or not depending on how this entry was opened)
      */
     public native byte[] read();
+
+    /**
+     * Drops the ZipFile struct internally to prevent a memory leak.
+     */
+    private native void _finalize();
+
+    @Override
+    protected void finalize() throws Throwable {
+        _finalize();
+        super.finalize();
+    }
 }

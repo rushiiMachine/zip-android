@@ -1,3 +1,3 @@
 rootProject.name = "zip-android"
-include(":testapp")
+include(":app")
 include(":lib")

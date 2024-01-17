@@ -1,0 +1,20 @@
+[package]
+name = "ziprs"
+version = "1.0.0"
+edition = "2021"
+
+[lib]
+crate_type = ["cdylib"]
+
+[profile.dev]
+panic = "unwind"
+
+[profile.release]
+panic = "unwind"
+
+[dependencies]
+zip = { path = "../zip", features = ["deflate-miniz", "bzip2", "zstd"], default-features = false }
+jni_fn = { git = "https://gitlab.com/antonok/jni_fn", branch = "overload-disambiguation" }
+catch_panic = "1.0.0"
+thiserror = "1.0.37"
+jni = "0.19.0"
