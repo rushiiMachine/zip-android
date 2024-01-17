@@ -6,8 +6,15 @@ edition = "2021"
 [lib]
 crate_type = ["cdylib"]
 
+[profile.dev]
+panic = "unwind"
+
+[profile.release]
+panic = "unwind"
+
 [dependencies]
 zip = { path = "../zip", features = ["deflate-miniz", "bzip2", "zstd"], default-features = false }
+catch_panic = "1.0.0"
 thiserror = "1.0.37"
 jni_fn = "0.1.0"
 jni = "0.19.0"

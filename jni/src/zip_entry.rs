@@ -1,4 +1,5 @@
 use std::io::Read;
+use catch_panic::catch_panic;
 
 use jni::{
     JNIEnv,
@@ -25,6 +26,7 @@ fn take_entry<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ZipFile<'static> {
     take_field(&env, obj, cache::fld_zipentry_ptr()).unwrap()
 }
 
+#[catch_panic(default = "std::ptr::null_mut()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getName(
     env: JNIEnv,
@@ -34,6 +36,7 @@ pub fn getName(
     env.new_string(entry.name()).unwrap().into_inner()
 }
 
+#[catch_panic(default = "std::ptr::null_mut()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getComment(
     env: JNIEnv,
@@ -43,6 +46,7 @@ pub fn getComment(
     env.new_string(entry.comment()).unwrap().into_inner()
 }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getLastModified(
     env: JNIEnv,
@@ -70,6 +74,7 @@ pub fn getLastModified(
     unix_time.j().unwrap()
 }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn isDir(
     env: JNIEnv,
@@ -79,6 +84,7 @@ pub fn isDir(
     entry.is_dir().into()
 }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getMode(
     env: JNIEnv,
@@ -88,6 +94,7 @@ pub fn getMode(
     entry.unix_mode().unwrap_or(0) as i32
 }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getCRC32(
     env: JNIEnv,
@@ -97,6 +104,7 @@ pub fn getCRC32(
     entry.crc32() as i32
 }
 
+#[catch_panic(default = "std::ptr::null_mut()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getExtraData(
     env: JNIEnv,
@@ -106,6 +114,7 @@ pub fn getExtraData(
     env.byte_array_from_slice(entry.extra_data()).unwrap()
 }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getSize(
     env: JNIEnv,
@@ -115,6 +124,7 @@ pub fn getSize(
     entry.size() as i64
 }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getCompressedSize(
     env: JNIEnv,
@@ -125,6 +135,7 @@ pub fn getCompressedSize(
 }
 
 #[allow(deprecated)]
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn _getCompression(
     env: JNIEnv,
@@ -141,6 +152,7 @@ pub fn _getCompression(
     }
 }
 
+#[catch_panic(default = "std::ptr::null_mut()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn read(
     env: JNIEnv,
@@ -159,6 +171,7 @@ pub fn read(
     env.byte_array_from_slice(&data).unwrap()
 }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn _finalize(
     env: JNIEnv,

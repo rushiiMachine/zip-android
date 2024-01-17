@@ -1,6 +1,7 @@
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::path::Path;
+use catch_panic::catch_panic;
 
 use jni::{
     JNIEnv,
@@ -29,6 +30,7 @@ fn take_writer<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ZipWriter<File> {
     take_field(&env, obj, cache::fld_zipwriter_ptr()).unwrap()
 }
 
+#[catch_panic]
 #[no_mangle]
 pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open__Ljava_lang_String_2Z(
     env: JNIEnv,
@@ -69,6 +71,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open__Ljava_
     set_writer(&env, class, writer);
 }
 
+// #[catch_panic]
 // #[no_mangle]
 // pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open___3B(
 //     env: JNIEnv,
@@ -89,6 +92,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open__Ljava_
 //     set_writer(&env, class, writer);
 // }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
 pub fn setComment(
     env: JNIEnv,
@@ -101,6 +105,7 @@ pub fn setComment(
     writer.set_raw_comment(bytes);
 }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
 pub fn writeEntry(
     env: JNIEnv,
@@ -140,6 +145,7 @@ pub fn writeEntry(
     writer.write_all(&bytes).unwrap();
 }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
 pub fn writeDir(
     env: JNIEnv,
@@ -154,6 +160,7 @@ pub fn writeDir(
     writer.add_directory(path, options).unwrap();
 }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
 pub fn close(
     env: JNIEnv,
@@ -166,6 +173,7 @@ pub fn close(
     }
 }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
 pub fn deleteEntry(
     env: JNIEnv,
@@ -189,6 +197,7 @@ pub fn deleteEntry(
     }
 }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
 pub fn deleteEntries(
     env: JNIEnv,

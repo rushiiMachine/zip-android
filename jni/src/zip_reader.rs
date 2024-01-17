@@ -2,6 +2,7 @@ use std::{
     fs::File,
     path::Path,
 };
+use catch_panic::catch_panic;
 
 use jni::{
     JNIEnv,
@@ -56,6 +57,7 @@ fn make_zip_entry<'a>(env: &JNIEnv<'a>, zip_result: ZipResult<ZipFile<'a>>) -> J
     zip_entry
 }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
 pub fn open(
     env: JNIEnv,
@@ -81,6 +83,7 @@ pub fn open(
     set_archive(&env, class, zip);
 }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
 pub fn close(
     env: JNIEnv,
@@ -89,6 +92,7 @@ pub fn close(
     take_archive(&env, class);
 }
 
+#[catch_panic(default = "std::ptr::null_mut()")]
 #[no_mangle]
 pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__I(
     env: JNIEnv,
@@ -103,6 +107,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__I
     make_zip_entry(&env, result).into_inner()
 }
 
+#[catch_panic(default = "std::ptr::null_mut()")]
 #[no_mangle]
 pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__Ljava_lang_String_2(
     env: JNIEnv,
@@ -117,6 +122,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__L
     make_zip_entry(&env, result).into_inner()
 }
 
+#[catch_panic(default = "std::ptr::null_mut()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
 pub fn openEntryRaw(
     env: JNIEnv,
@@ -131,6 +137,7 @@ pub fn openEntryRaw(
     make_zip_entry(&env, result).into_inner()
 }
 
+#[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
 pub fn getEntryCount(
     env: JNIEnv,
@@ -140,6 +147,7 @@ pub fn getEntryCount(
     zip.len() as jint
 }
 
+#[catch_panic(default = "std::ptr::null_mut()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
 pub fn getRawComment(
     env: JNIEnv,
@@ -149,6 +157,7 @@ pub fn getRawComment(
     env.byte_array_from_slice(zip.comment()).unwrap()
 }
 
+#[catch_panic(default = "std::ptr::null_mut()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
 pub fn getEntryNames(
     env: JNIEnv,

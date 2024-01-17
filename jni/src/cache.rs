@@ -1,11 +1,9 @@
-use std::os::raw::c_void;
+use catch_panic::catch_panic;
 
 use jni::{
     descriptors::Desc,
-    JavaVM,
     JNIEnv,
     objects::{GlobalRef, JClass, JFieldID, JMethodID, JStaticMethodID},
-    sys::{jint, JNI_VERSION_1_6},
 };
 
 // If anyone wants to improve these, please do
@@ -56,10 +54,8 @@ field!(FLD_ZIPENTRY_PTR, fld_zipentry_ptr);
 field!(FLD_ZIPREADER_PTR, fld_zipreader_ptr);
 field!(FLD_ZIPWRITER_PTR, fld_zipwriter_ptr);
 
-#[no_mangle]
-pub unsafe extern "system" fn JNI_OnLoad(vm: JavaVM, _reserved: c_void) -> jint {
-    let env = vm.get_env().unwrap();
-
+#[catch_panic]
+pub unsafe fn init(env: JNIEnv) {
     CLS_ZIPENTRY = get_class(&env, "com/github/diamondminer88/zip/ZipEntry");
     CLS_STRING = get_class(&env, "java/lang/String");
     CLS_DATE = get_class(&env, "java/util/Date");
@@ -100,8 +96,6 @@ pub unsafe extern "system" fn JNI_OnLoad(vm: JavaVM, _reserved: c_void) -> jint 
         "ptr",
         "J",
     );
-
-    JNI_VERSION_1_6
 }
 
 fn get_class(env: &JNIEnv, class: &str) -> Option<GlobalRef> {
