@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 import org.gradle.kotlin.dsl.support.listFilesOrdered
 
 group = "com.github.diamondminer88"
@@ -20,17 +22,24 @@ dependencies {
 }
 
 android {
-    namespace = "com.github.diamondminer88.zip.zpp"
+    namespace = "com.github.diamondminer88.zip"
     compileSdk = 33
 
     defaultConfig {
         minSdk = 21
         targetSdk = 33
+
+        consumerProguardFile("consumer-rules.pro")
     }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    buildFeatures {
+        buildConfig = false
+        resValues = false
     }
 
     ndkVersion = sdkDirectory.resolve("ndk").listFilesOrdered().last().name
