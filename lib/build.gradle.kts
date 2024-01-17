@@ -83,7 +83,10 @@ task<Javadoc>("javadoc") {
     }
 
     afterEvaluate {
-        val libPaths = files(android.libraryVariants.map { it.javaCompileProvider.get().classpath.files })
+        val libPaths = android.libraryVariants
+            .map { it.javaCompileProvider.get().classpath.files }
+            .let { files(it) }
+
         tasks.getByName<Javadoc>("javadoc")
             .classpath += libPaths
     }
@@ -92,11 +95,6 @@ task<Javadoc>("javadoc") {
 task<Jar>("javadocJar") {
     from(tasks["javadoc"].outputs)
     archiveClassifier.set("javadoc")
-}
-
-signing {
-    if (findProperty("signing.secretKeyRingFile") != null)
-        sign(publishing.publications)
 }
 
 // Must be after evaluation to get the bundleReleaseAar artifact
@@ -164,6 +162,15 @@ afterEvaluate {
                     setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
                 }
             }
+        }
+    }
+
+    signing {
+        if (System.getenv("SONATYPE_USERNAME") != null) {
+            if (findProperty("signing.secretKeyRingFile") == null)
+                throw Error("no gpg key info found for a release build")
+
+            sign(publishing.publications)
         }
     }
 }
