@@ -93,8 +93,9 @@ signing {
 afterEvaluate {
     publishing {
         publications {
-            val configureBasePublication: MavenPublication.() -> Unit = {
+            register("zip-android", MavenPublication::class) {
                 artifactId = "zip-android"
+                groupId = "io.github.diamondminer88"
 
                 artifact(tasks["sourcesJar"])
                 artifact(tasks["javadocJar"])
@@ -106,11 +107,11 @@ afterEvaluate {
                 pom {
                     name.set("zip-android")
                     description.set("Native zip library + java interface for android")
-                    url.set("https://github.com/DiamondMiner88/zip-android")
+                    url.set("https://github.com/rushiiMachine/zip-android")
                     licenses {
                         license {
                             name.set("Apache 2.0 license")
-                            url.set("https://github.com/DiamondMiner88/zip-android/blob/master/LICENSE")
+                            url.set("https://github.com/rushiiMachine/zip-android/blob/master/LICENSE")
                             comments.set("zip-android, thiserror, jni_fn, jni license")
                         }
                         license {
@@ -124,59 +125,33 @@ afterEvaluate {
                         developer {
                             id.set("rushii")
                             name.set("rushii")
-                            url.set("https://github.com/DiamondMiner88/")
-                            email.set("vdiamond_@outlook.com")
+                            url.set("https://github.com/rushiiMachine/")
                         }
                     }
 
                     scm {
-                        url.set("https://github.com/DiamondMiner88/zip-android")
-                        connection.set("scm:git:github.com/DiamondMiner88/zip-android.git")
-                        developerConnection.set("scm:git:ssh://github.com/DiamondMiner88/zip-android.git")
+                        url.set("https://github.com/rushiiMachine/zip-android")
+                        connection.set("scm:git:github.com/rushiiMachine/zip-android.git")
+                        developerConnection.set("scm:git:ssh://github.com/rushiiMachine/zip-android.git")
                     }
                 }
-            }
-
-            register("libziprs-amulet", MavenPublication::class) {
-                configureBasePublication(this)
-                groupId = "com.github.diamondminer88"
-            }
-
-            register("libziprs-sonatype", MavenPublication::class) {
-                configureBasePublication(this)
-                groupId = "io.github.diamondminer88"
             }
         }
 
         repositories {
-            val amuletUsername = System.getenv("AMULET_USERNAME")
-            val amuletPassword = System.getenv("AMULET_PASSWORD")
-
             val sonatypeUsername = System.getenv("SONATYPE_USERNAME")
             val sonatypePassword = System.getenv("SONATYPE_PASSWORD")
 
-            if ((amuletUsername == null || amuletPassword == null) && (sonatypeUsername == null || sonatypePassword == null))
+            if (sonatypeUsername == null || sonatypePassword == null)
                 mavenLocal()
             else {
-                if (amuletUsername != null && amuletPassword != null) {
-                    maven {
-                        name = "amulet"
-                        credentials {
-                            username = amuletUsername
-                            password = amuletPassword
-                        }
-                        setUrl("https://redditvanced.ddns.net/maven/releases")
+                maven {
+                    name = "sonatype"
+                    credentials {
+                        username = sonatypeUsername
+                        password = sonatypePassword
                     }
-                }
-                if (sonatypeUsername != null && sonatypePassword != null) {
-                    maven {
-                        name = "sonatype"
-                        credentials {
-                            username = sonatypeUsername
-                            password = sonatypePassword
-                        }
-                        setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-                    }
+                    setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
                 }
             }
         }
