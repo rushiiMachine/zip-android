@@ -4,7 +4,7 @@ version = "1.0.0"
 edition = "2021"
 
 [lib]
-crate_type = ["cdylib"]
+crate-type = ["cdylib"]
 
 [profile.dev]
 panic = "unwind"
@@ -19,7 +19,8 @@ codegen-units = 1
 
 [dependencies]
 zip = { path = "../zip", features = ["deflate-miniz", "bzip2", "zstd"], default-features = false }
-catch_panic = "1.0.0"
-thiserror = "1.0.37"
-jni_fn = "0.1.0"
-jni = "0.19.0"
+catch_panic = { git = "https://github.com/rushiiMachine/catch_panic.git", rev = "7ce5a28" } # https://github.com/sorz/catch_panic/pull/1
+thiserror = "2.0.11"
+jni_fn = "0.1.2"
+jni = "0.21.1"
+paste = "1.0.15"

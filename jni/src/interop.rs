@@ -6,12 +6,13 @@ use std::{
     sync::Mutex,
 };
 
+use jni::signature::ReturnType;
 use jni::{
     errors::Result as JniResult,
-    JNIEnv,
     objects::{JFieldID, JObject},
-    signature::{JavaType, Primitive},
+    signature::Primitive,
     sys::jlong,
+    JNIEnv,
 };
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
@@ -113,34 +114,37 @@ macro_rules! non_null {
 /// A port of `JNIEnv::set_rust_field` with type `T` modified to not require `Send`.
 /// It still preserves Mutex around the value, not for atomic access but for making sure
 /// the unique owner at the time it is taken.
-pub fn set_field<'a, O, S, T>(env: &JNIEnv<'a>, obj: O, field_id: S, rust_object: T) -> JniResult<()>
-    where
-        O: Into<JObject<'a>>,
-        S: Into<JFieldID<'a>>,
+pub fn set_field<'local, O, S, T>(
+    env: &mut JNIEnv<'local>,
+    obj: O,
+    field_id: S,
+    rust_object: T,
+) -> JniResult<()>
+where
+    O: AsRef<JObject<'local>>,
+    S: Into<JFieldID>,
 {
-    let obj = obj.into();
-    let _guard = env.lock_obj(obj)?;
+    let _guard = env.lock_obj(&obj)?;
 
     let ptr = into_raw(rust_object);
-    env.set_field_unchecked(obj, field_id.into(), ptr.into())
+    env.set_field_unchecked(&obj, field_id.into(), ptr.into())
 }
 
 /// A port of `JNIEnv::get_rust_field` with type `T` modified to not require `Send`.
-pub fn get_field<'a, O, S, T>(
-    env: &JNIEnv<'a>,
+pub fn get_field<'local, O, S, T>(
+    env: &mut JNIEnv<'local>,
     obj: O,
     field: S,
-) -> JniResult<ReentrantReference<'a, T>>
-    where
-        O: Into<JObject<'a>>,
-        S: Into<JFieldID<'a>>,
-        T: 'static,
+) -> JniResult<ReentrantReference<'local, T>>
+where
+    O: AsRef<JObject<'local>>,
+    S: Into<JFieldID>,
+    T: 'static,
 {
-    let obj = obj.into();
-    let _guard = env.lock_obj(obj)?;
+    let _guard = env.lock_obj(&obj)?;
 
     let ptr = env
-        .get_field_unchecked(obj, field.into(), JavaType::Primitive(Primitive::Long))?
+        .get_field_unchecked(&obj, field.into(), ReturnType::Primitive(Primitive::Long))?
         .j()? as *mut ReentrantLock<T>;
     non_null!(ptr, "rust value from Java");
 
@@ -151,19 +155,18 @@ pub fn get_field<'a, O, S, T>(
 }
 
 /// A port of `JNIEnv::take_rust_field` with type `T` modified to not require `Send`.
-pub fn take_field<'a, O, S, T>(env: &JNIEnv<'a>, obj: O, field_id: S) -> JniResult<T>
-    where
-        O: Into<JObject<'a>>,
-        S: Into<JFieldID<'a>>,
-        T: 'static,
+pub fn take_field<'local, O, S, T>(env: &mut JNIEnv<'local>, obj: O, field_id: S) -> JniResult<T>
+where
+    O: AsRef<JObject<'local>>,
+    S: Into<JFieldID>,
+    T: 'static,
 {
     let field_id = field_id.into();
-    let obj = obj.into();
 
-    let _guard = env.lock_obj(obj)?;
+    let _guard = env.lock_obj(&obj)?;
     let mbox = {
         let ptr = env
-            .get_field_unchecked(obj, field_id, JavaType::Primitive(Primitive::Long))?
+            .get_field_unchecked(&obj, field_id, ReturnType::Primitive(Primitive::Long))?
             .j()? as *mut ReentrantLock<T>;
 
         non_null!(ptr, "rust value from Java");

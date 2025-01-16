@@ -1058,7 +1058,7 @@ impl<'a> Drop for ZipFile<'a> {
 /// * `external_attributes`: `unix_mode()`: will return None
 pub fn read_zipfile_from_stream<'a, R: io::Read>(
     reader: &'a mut R,
-) -> ZipResult<Option<ZipFile<'_>>> {
+) -> ZipResult<Option<ZipFile<'a>>> {
     let signature = reader.read_u32::<LittleEndian>()?;
 
     match signature {

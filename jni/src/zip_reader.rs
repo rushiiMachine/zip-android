@@ -1,13 +1,10 @@
-use std::{
-    fs::File,
-    path::Path,
-};
 use catch_panic::catch_panic;
+use std::{fs::File, path::Path};
 
 use jni::{
-    JNIEnv,
     objects::{JClass, JObject, JString},
     sys::{jbyteArray, jint, jobject, jobjectArray, jsize},
+    JNIEnv,
 };
 use jni_fn::jni_fn;
 use zip::{
@@ -17,54 +14,52 @@ use zip::{
 };
 
 use crate::cache;
-use crate::interop::{get_field, ReentrantReference, set_field, take_field};
+use crate::interop::{get_field, set_field, take_field, ReentrantReference};
 
-fn get_archive<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ReentrantReference<'a, ZipArchive<File>> {
-    get_field(&env, obj, cache::fld_zipreader_ptr()).unwrap()
+fn get_archive<'a>(
+    env: &mut JNIEnv<'a>,
+    obj: &JObject<'a>,
+) -> ReentrantReference<'a, ZipArchive<File>> {
+    get_field(env, obj, cache::ZipReader_ptr()).unwrap()
 }
 
-fn set_archive<'a>(env: &JNIEnv<'a>, obj: JClass<'a>, archive: ZipArchive<File>) {
-    set_field(&env, obj, cache::fld_zipreader_ptr(), archive).unwrap();
+fn set_archive<'a>(env: &mut JNIEnv<'a>, obj: &JObject<'a>, archive: ZipArchive<File>) {
+    set_field(env, obj, cache::ZipReader_ptr(), archive).unwrap();
 }
 
-fn set_entry<'a>(env: &JNIEnv<'a>, obj: JClass<'a>, entry: ZipFile) {
-    set_field(&env, obj, cache::fld_zipentry_ptr(), entry).unwrap();
+fn set_entry<'a>(env: &mut JNIEnv<'a>, obj: &JObject<'a>, entry: ZipFile) {
+    set_field(env, obj, cache::ZipEntry_ptr(), entry).unwrap();
 }
 
-fn take_archive<'a>(env: &JNIEnv<'a>, obj: JClass<'a>) -> ZipArchive<File> {
-    take_field(&env, obj, cache::fld_zipreader_ptr()).unwrap()
+fn take_archive<'a>(env: &mut JNIEnv<'a>, obj: &JObject<'a>) -> ZipArchive<File> {
+    take_field(env, obj, cache::ZipReader_ptr()).unwrap()
 }
 
-fn make_zip_entry<'a>(env: &JNIEnv<'a>, zip_result: ZipResult<ZipFile<'a>>) -> JObject<'a> {
+fn make_zip_entry<'a>(env: &mut JNIEnv<'a>, zip_result: ZipResult<ZipFile>) -> JObject<'a> {
     let file = match zip_result {
         Ok(file) => file,
         Err(ZipError::FileNotFound) => {
             return JObject::null().into();
         }
         Err(e) => {
-            env.throw(format!("Failed to open zip entry! {:?}", e)).unwrap();
+            env.throw(format!("Failed to open zip entry! {:?}", e))
+                .unwrap();
             return JObject::null().into();
         }
     };
 
-    let gref_class = cache::cls_zipentry();
-    let zip_entry = env.new_object_unchecked(
-        JClass::from(gref_class.as_obj()),
-        cache::ctor_zipentry(),
-        &[],
-    ).unwrap();
-    set_entry(&env, zip_entry.into(), file);
+    let zip_entry = unsafe {
+        env.new_object_unchecked(&cache::ZipEntry(), cache::ZipEntry_ctor(), &[])
+            .unwrap()
+    };
+    set_entry(env, &zip_entry, file);
     zip_entry
 }
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
-pub fn open(
-    env: JNIEnv,
-    class: JClass,
-    path: JString,
-) {
-    let path: String = env.get_string(path).unwrap().into();
+pub fn open(mut env: JNIEnv, class: JClass, path: JString) {
+    let path: String = env.get_string(&path).unwrap().into();
     let file = match File::open(Path::new(&path)) {
         Ok(file) => file,
         Err(e) => {
@@ -76,107 +71,90 @@ pub fn open(
     let zip = match ZipArchive::new(file) {
         Ok(zip) => zip,
         Err(e) => {
-            env.throw(format!("Failed to open archive: {:?}", e)).unwrap();
+            env.throw(format!("Failed to open archive: {:?}", e))
+                .unwrap();
             return;
         }
     };
-    set_archive(&env, class, zip);
+    set_archive(&mut env, &*class, zip);
 }
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
-pub fn close(
-    env: JNIEnv,
-    class: JClass,
-) {
-    take_archive(&env, class);
+pub fn close(mut env: JNIEnv, class: JClass) {
+    take_archive(&mut env, &*class);
 }
 
 #[catch_panic(default = "std::ptr::null_mut()")]
 #[no_mangle]
 pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__I(
-    env: JNIEnv,
+    mut env: JNIEnv,
     class: JClass,
     index: jint,
 ) -> jobject {
     let index = index as usize;
 
-    let mut zip = get_archive(&env, class);
+    let mut zip = get_archive(&mut env, &*class);
     let result = zip.by_index(index);
 
-    make_zip_entry(&env, result).into_inner()
+    make_zip_entry(&mut env, result).into_raw()
 }
 
 #[catch_panic(default = "std::ptr::null_mut()")]
 #[no_mangle]
 pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__Ljava_lang_String_2(
-    env: JNIEnv,
+    mut env: JNIEnv,
     class: JClass,
     path: JString,
 ) -> jobject {
-    let path: String = env.get_string(path).unwrap().into();
+    let path: String = env.get_string(&path).unwrap().into();
 
-    let mut zip = get_archive(&env, class);
+    let mut zip = get_archive(&mut env, &*class);
     let result = zip.by_name(path.as_str());
 
-    make_zip_entry(&env, result).into_inner()
+    make_zip_entry(&mut env, result).into_raw()
 }
 
 #[catch_panic(default = "std::ptr::null_mut()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
-pub fn openEntryRaw(
-    env: JNIEnv,
-    class: JClass,
-    index: jint,
-) -> jobject {
+pub fn openEntryRaw(mut env: JNIEnv, class: JClass, index: jint) -> jobject {
     let index = index as usize;
 
-    let mut zip = get_archive(&env, class);
+    let mut zip = get_archive(&mut env, &*class);
     let result = zip.by_index_raw(index);
 
-    make_zip_entry(&env, result).into_inner()
+    make_zip_entry(&mut env, result).into_raw()
 }
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
-pub fn getEntryCount(
-    env: JNIEnv,
-    class: JClass,
-) -> jint {
-    let zip = get_archive(&env, class);
+pub fn getEntryCount(mut env: JNIEnv, class: JClass) -> jint {
+    let zip = get_archive(&mut env, &*class);
     zip.len() as jint
 }
 
 #[catch_panic(default = "std::ptr::null_mut()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
-pub fn getRawComment(
-    env: JNIEnv,
-    class: JClass,
-) -> jbyteArray {
-    let zip = get_archive(&env, class);
-    env.byte_array_from_slice(zip.comment()).unwrap()
+pub fn getRawComment(mut env: JNIEnv, class: JClass) -> jbyteArray {
+    let zip = get_archive(&mut env, &*class);
+    env.byte_array_from_slice(zip.comment()).unwrap().into_raw()
 }
 
 #[catch_panic(default = "std::ptr::null_mut()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
-pub fn getEntryNames(
-    env: JNIEnv,
-    class: JClass,
-) -> jobjectArray {
-    let zip = get_archive(&env, class);
+pub fn getEntryNames(mut env: JNIEnv, class: JClass) -> jobjectArray {
+    let zip = get_archive(&mut env, &*class);
     let names_length = zip.file_names().collect::<Vec<&str>>().len();
 
-    let gref_class = cache::cls_string();
-    let array = env.new_object_array(
-        names_length as jsize,
-        JClass::from(gref_class.as_obj()),
-        JObject::null(),
-    ).unwrap();
+    let array = env
+        .new_object_array(names_length as jsize, &cache::String(), JObject::null())
+        .unwrap();
 
     for (i, name) in zip.file_names().enumerate() {
         let jvm_name = env.auto_local(env.new_string(name).unwrap());
-        env.set_object_array_element(array, i as jsize, jvm_name.as_obj()).unwrap();
+        env.set_object_array_element(&array, i as jsize, jvm_name)
+            .unwrap();
     }
 
-    array
+    array.into_raw()
 }

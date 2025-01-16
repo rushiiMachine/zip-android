@@ -1,132 +1,93 @@
 use catch_panic::catch_panic;
+use jni::objects::{GlobalRef, JFieldID, JMethodID, JStaticMethodID};
+use jni::JNIEnv;
+use std::sync::Mutex;
 
-use jni::{
-    descriptors::Desc,
-    JNIEnv,
-    objects::{GlobalRef, JClass, JFieldID, JMethodID, JStaticMethodID},
-};
+macro_rules! cache_ref {
+    ($name:ident : $ty:ty) => {
+        paste::paste! {
+            #[allow(non_upper_case_globals)]
+            static [<INNER_ $name>]: Mutex<Option<$ty>> = Mutex::new(None);
 
-// If anyone wants to improve these, please do
-// Specifically inst_method + static_method could be merged into one
-// I barely know anything about rust macros
-macro_rules! class {
-    ($variable:ident, $getter:ident) => {
-        static mut $variable: Option<GlobalRef> = None;
-        pub fn $getter() -> GlobalRef {
-            unsafe { $variable.clone().unwrap() }
+            /// Unwraps this cache member as long as `JNI_OnUnload` has not been called yet.
+            /// The values returned by this should be disposed of as quickly as possible and not held.
+            #[allow(non_snake_case)]
+            pub fn $name() -> $ty
+                where $ty: Clone
+            {
+                [<INNER_ $name>].lock()
+                    .expect("jni_cache mutex lock fail")
+                    .as_ref()
+                    .expect("JNI cache already cleaned up")
+                    .clone()
+            }
+
+            /// Initializes this global cached value. If it already contains a value, a panic occurs.
+            #[allow(non_snake_case)]
+            fn [<init_ $name>](value: $ty)
+                where $ty: Clone
+            {
+                let mut option = [<INNER_ $name>].lock()
+                    .expect("jni_cache mutex lock fail");
+
+                match option.as_ref() {
+                    Some(_) => panic!("jni_cache member already initialized"),
+                    None => { *option = Some(value); }
+                };
+            }
         }
-    }
+    };
 }
 
-macro_rules! inst_method {
-    ($variable:ident, $getter:ident) => {
-        static mut $variable: Option<JMethodID> = None;
-        pub fn $getter() -> JMethodID<'static> {
-            unsafe { $variable.unwrap() }
-        }
+// Java Stdlib
+cache_ref!(String: GlobalRef);
+cache_ref!(Date: GlobalRef);
+cache_ref!(Date_UTC: JStaticMethodID);
+
+// zip-android
+cache_ref!(ZipReader: GlobalRef);
+cache_ref!(ZipReader_ptr: JFieldID);
+cache_ref!(ZipWriter: GlobalRef);
+cache_ref!(ZipWriter_ptr: JFieldID);
+cache_ref!(ZipEntry: GlobalRef);
+cache_ref!(ZipEntry_ctor: JMethodID);
+cache_ref!(ZipEntry_ptr: JFieldID);
+
+#[catch_panic(default = "false")]
+pub(super) fn init(mut env: JNIEnv) -> bool {
+    fn class_ref(env: &mut JNIEnv, name: &str) -> GlobalRef {
+        env.find_class(name)
+            .and_then(|cls| env.new_global_ref(cls))
+            .expect("failed to get class for jni_cache member")
     }
-}
 
-macro_rules! static_method {
-    ($variable:ident, $getter:ident) => {
-        static mut $variable: Option<JStaticMethodID> = None;
-        pub fn $getter() -> JStaticMethodID<'static> {
-            unsafe { $variable.unwrap() }
-        }
-    }
-}
+    // TODO: better errors when failing to unwrap so users can figure out proguard issues
 
-macro_rules! field {
-    ($variable:ident, $getter:ident) => {
-        static mut $variable: Option<JFieldID> = None;
-        pub fn $getter() -> JFieldID<'static> {
-            unsafe { $variable.unwrap() }
-        }
-    }
-}
-
-class!(CLS_ZIPENTRY, cls_zipentry);
-class!(CLS_STRING, cls_string);
-class!(CLS_DATE, cls_date);
-inst_method!(CTOR_ZIPENTRY, ctor_zipentry);
-static_method!(MTOD_DATE_UTC, mtod_date_utc);
-field!(FLD_ZIPENTRY_PTR, fld_zipentry_ptr);
-field!(FLD_ZIPREADER_PTR, fld_zipreader_ptr);
-field!(FLD_ZIPWRITER_PTR, fld_zipwriter_ptr);
-
-#[catch_panic]
-pub unsafe fn init(env: JNIEnv) {
-    CLS_ZIPENTRY = get_class(&env, "com/github/diamondminer88/zip/ZipEntry");
-    CLS_STRING = get_class(&env, "java/lang/String");
-    CLS_DATE = get_class(&env, "java/util/Date");
-
-    CTOR_ZIPENTRY = get_method(
-        &env,
-        "com/github/diamondminer88/zip/ZipEntry",
-        "<init>",
-        "()V",
-        false,
-    ).instance;
-
-    MTOD_DATE_UTC = get_method(
-        &env,
-        "java/util/Date",
-        "UTC",
-        "(IIIIII)J",
-        true,
-    ).static_;
-
-    FLD_ZIPENTRY_PTR = get_field(
-        &env,
-        "com/github/diamondminer88/zip/ZipEntry",
-        "ptr",
-        "J",
+    // Java Stdlib
+    init_String(class_ref(&mut env, "java/lang/String"));
+    init_Date(class_ref(&mut env, "java/util/Date"));
+    init_Date_UTC(
+        env.get_static_method_id(&Date(), "UTC", "(IIIIII)J")
+            .unwrap(),
     );
 
-    FLD_ZIPREADER_PTR = get_field(
-        &env,
+    // zip-android
+    init_ZipReader(class_ref(
+        &mut env,
         "com/github/diamondminer88/zip/ZipReader",
-        "ptr",
-        "J",
-    );
-
-    FLD_ZIPWRITER_PTR = get_field(
-        &env,
+    ));
+    init_ZipReader_ptr(env.get_field_id(&ZipReader(), "ptr", "J").unwrap());
+    init_ZipWriter(class_ref(
+        &mut env,
         "com/github/diamondminer88/zip/ZipWriter",
-        "ptr",
-        "J",
-    );
-}
+    ));
+    init_ZipWriter_ptr(env.get_field_id(&ZipWriter(), "ptr", "J").unwrap());
+    init_ZipEntry(class_ref(
+        &mut env,
+        "com/github/diamondminer88/zip/ZipEntry",
+    ));
+    init_ZipEntry_ctor(env.get_method_id(&ZipEntry(), "<init>", "()V").unwrap());
+    init_ZipEntry_ptr(env.get_field_id(&ZipEntry(), "ptr", "J").unwrap());
 
-fn get_class(env: &JNIEnv, class: &str) -> Option<GlobalRef> {
-    let cls = env.find_class(class).unwrap();
-    let cls_ref = env.new_global_ref(cls).unwrap();
-    Some(cls_ref)
-}
-
-fn get_field<'a, C>(env: &JNIEnv<'a>, class: C, name: &str, sig: &str) -> Option<JFieldID<'static>>
-    where C: Desc<'a, JClass<'a>>
-{
-    let field = env.get_field_id(class, name, sig).unwrap()
-        .into_inner().into();
-    Some(field)
-}
-
-fn get_method<'c, C>(env: &JNIEnv<'c>, class: C, name: &str, sig: &str, is_static: bool) -> UnionGetMethod
-    where C: Desc<'c, JClass<'c>>
-{
-    if is_static {
-        let id = env.get_static_method_id(class, name, sig).unwrap()
-            .into_inner().into();
-        UnionGetMethod { static_: Some(id) }
-    } else {
-        let id = env.get_method_id(class, name, sig).unwrap()
-            .into_inner().into();
-        UnionGetMethod { instance: Some(id) }
-    }
-}
-
-union UnionGetMethod {
-    instance: Option<JMethodID<'static>>,
-    static_: Option<JStaticMethodID<'static>>,
+    true
 }
