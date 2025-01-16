@@ -51,6 +51,8 @@ class MainActivity : Activity() {
             val entry = zip.openEntry("compressed_unaligned.txt")!!
             val content = entry.read()?.decodeToString()
             Log.i(TAG, "compressed_unaligned.txt index: ${entry.index} compression: ${entry.compression.name} content: $content")
+            Log.i(TAG, "uncompressed_unaligned.txt aligned: ${(zip.openEntry("uncompressed_unaligned.txt")!!.dataOffset and 0x3) == 0L}")
+            Log.i(TAG, "uncompressed_aligned.txt aligned: ${(zip.openEntry("uncompressed_aligned.txt")!!.dataOffset and 0x3) == 0L}")
 
             zip.forEach { println("Entry: ${it.name} compressed size: ${it.compressedSize} raw size: ${it.size}") }
         }

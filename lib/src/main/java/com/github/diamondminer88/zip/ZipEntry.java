@@ -20,6 +20,7 @@ public class ZipEntry {
 
     /**
      * Get the index of this file in the archive.
+     * If trying to determine file alignment, consider {@link ZipEntry#getDataOffset()}.
      */
     public native int getIndex();
 
@@ -96,6 +97,13 @@ public class ZipEntry {
     public ZipCompression getCompression() {
         return ZipCompression.fromInternal(_getCompression());
     }
+
+    /**
+     * Get the zip entry data offset inside the archive.
+     * This is not particularly useful other than determining if
+     * a file is aligned to a specific boundary.
+     */
+    public native long getDataOffset();
 
     /**
      * Reads this file entry's data (decompressed or not depending on how this entry was opened)

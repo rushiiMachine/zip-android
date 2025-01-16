@@ -136,6 +136,13 @@ pub fn _getCompression(mut env: JNIEnv, class: JClass) -> jlong {
     }
 }
 
+#[catch_panic]
+#[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
+pub fn getDataOffset(mut env: JNIEnv, class: JClass) -> jlong {
+    let entry = get_entry(&mut env, class);
+    entry.data_start() as i64
+}
+
 #[catch_panic(default = "std::ptr::null_mut()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn read(mut env: JNIEnv, class: JClass) -> jbyteArray {
