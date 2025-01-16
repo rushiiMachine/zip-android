@@ -207,8 +207,8 @@ pub fn deleteEntries(
     let entries_len = env.get_array_length(entries).unwrap() as usize;
     let entries: Vec<String> = (0..entries_len)
         .map(|i| {
-            let obj = env.get_object_array_element(entries, i as jsize).unwrap();
-            env.get_string(obj.into()).unwrap().into()
+            let obj = env.auto_local(env.get_object_array_element(entries, i as jsize).unwrap());
+            env.get_string(obj.as_obj().into()).unwrap().into()
         })
         .collect();
 

@@ -174,8 +174,8 @@ pub fn getEntryNames(
     ).unwrap();
 
     for (i, name) in zip.file_names().enumerate() {
-        let jvm_name = env.new_string(name).unwrap();
-        env.set_object_array_element(array, i as jsize, jvm_name).unwrap();
+        let jvm_name = env.auto_local(env.new_string(name).unwrap());
+        env.set_object_array_element(array, i as jsize, jvm_name.as_obj()).unwrap();
     }
 
     array
