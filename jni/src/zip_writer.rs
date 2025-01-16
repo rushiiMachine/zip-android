@@ -6,7 +6,7 @@ use std::path::Path;
 use jni::objects::{JByteArray, JObjectArray};
 use jni::sys::{jbyte, jshort};
 use jni::{
-    objects::{JClass, JString},
+    objects::{JObject, JString},
     sys::{jboolean, jsize},
     JNIEnv,
 };
@@ -19,18 +19,18 @@ use zip::{CompressionMethod, ZipWriter};
 use crate::cache;
 use crate::interop::{get_field, set_field, take_field, ReentrantReference};
 
-fn set_writer<'a>(env: &mut JNIEnv<'a>, obj: JClass<'a>, writer: ZipWriter<File>) {
+fn set_writer<'a>(env: &mut JNIEnv<'a>, obj: JObject<'a>, writer: ZipWriter<File>) {
     set_field(env, obj, cache::ZipWriter_ptr(), writer).unwrap()
 }
 
 fn get_writer<'a>(
     env: &mut JNIEnv<'a>,
-    obj: JClass<'a>,
+    obj: JObject<'a>,
 ) -> ReentrantReference<'a, ZipWriter<File>> {
     get_field(env, obj, cache::ZipWriter_ptr()).unwrap()
 }
 
-fn take_writer<'a>(env: &mut JNIEnv<'a>, obj: JClass<'a>) -> ZipWriter<File> {
+fn take_writer<'a>(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> ZipWriter<File> {
     take_field(env, obj, cache::ZipWriter_ptr()).unwrap()
 }
 
@@ -38,7 +38,7 @@ fn take_writer<'a>(env: &mut JNIEnv<'a>, obj: JClass<'a>) -> ZipWriter<File> {
 #[no_mangle]
 pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open__Ljava_lang_String_2Z(
     mut env: JNIEnv,
-    class: JClass,
+    class: JObject,
     path: JString,
     append: jboolean,
 ) {
@@ -80,7 +80,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open__Ljava_
 // #[no_mangle]
 // pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open___3B(
 //     env: JNIEnv,
-//     class: JClass,
+//     class: JObject,
 //     bytes: jbyteArray,
 // ) {
 //     let bytes = env.convert_byte_array(bytes).unwrap();
@@ -99,7 +99,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open__Ljava_
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
-pub fn setComment(mut env: JNIEnv, class: JClass, bytes: JByteArray) {
+pub fn setComment(mut env: JNIEnv, class: JObject, bytes: JByteArray) {
     let bytes = env.convert_byte_array(bytes).unwrap();
     let mut writer = get_writer(&mut env, class);
 
@@ -110,7 +110,7 @@ pub fn setComment(mut env: JNIEnv, class: JClass, bytes: JByteArray) {
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
 pub fn writeEntry(
     mut env: JNIEnv,
-    class: JClass,
+    class: JObject,
     path: JString,
     bytes: JByteArray,
     compression: jbyte,
@@ -148,7 +148,7 @@ pub fn writeEntry(
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
-pub fn writeDir(mut env: JNIEnv, class: JClass, path: JString) {
+pub fn writeDir(mut env: JNIEnv, class: JObject, path: JString) {
     let path = env.get_string(&path).unwrap();
     let mut writer = get_writer(&mut env, class);
 
@@ -158,7 +158,7 @@ pub fn writeDir(mut env: JNIEnv, class: JClass, path: JString) {
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
-pub fn close(mut env: JNIEnv, class: JClass) {
+pub fn close(mut env: JNIEnv, class: JObject) {
     let mut writer = take_writer(&mut env, class);
     match writer.finish() {
         Err(e) => env.throw(format!("Failed to close zip: {:?}", e)).unwrap(),
@@ -168,7 +168,7 @@ pub fn close(mut env: JNIEnv, class: JClass) {
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
-pub fn deleteEntry(mut env: JNIEnv, class: JClass, path: JString, fill_void: jboolean) {
+pub fn deleteEntry(mut env: JNIEnv, class: JObject, path: JString, fill_void: jboolean) {
     let path = env.get_string(&path).unwrap();
     let fill_void = fill_void == 1;
     let mut writer = get_writer(&mut env, class);
@@ -188,7 +188,7 @@ pub fn deleteEntry(mut env: JNIEnv, class: JClass, path: JString, fill_void: jbo
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
-pub fn deleteEntries(mut env: JNIEnv, class: JClass, entries: JObjectArray) {
+pub fn deleteEntries(mut env: JNIEnv, class: JObject, entries: JObjectArray) {
     let entries_len = env.get_array_length(&entries).unwrap() as usize;
     let entries: Vec<String> = (0..entries_len)
         .map(|i| {

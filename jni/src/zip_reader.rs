@@ -2,7 +2,7 @@ use catch_panic::catch_panic;
 use std::{fs::File, path::Path};
 
 use jni::{
-    objects::{JClass, JObject, JString},
+    objects::{JObject, JString},
     sys::{jbyteArray, jint, jobject, jobjectArray, jsize},
     JNIEnv,
 };
@@ -58,7 +58,7 @@ fn make_zip_entry<'a>(env: &mut JNIEnv<'a>, zip_result: ZipResult<ZipFile>) -> J
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
-pub fn open(mut env: JNIEnv, class: JClass, path: JString) {
+pub fn open(mut env: JNIEnv, class: JObject, path: JString) {
     let path: String = env.get_string(&path).unwrap().into();
     let file = match File::open(Path::new(&path)) {
         Ok(file) => file,
@@ -76,25 +76,25 @@ pub fn open(mut env: JNIEnv, class: JClass, path: JString) {
             return;
         }
     };
-    set_archive(&mut env, &*class, zip);
+    set_archive(&mut env, &class, zip);
 }
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
-pub fn close(mut env: JNIEnv, class: JClass) {
-    take_archive(&mut env, &*class);
+pub fn close(mut env: JNIEnv, class: JObject) {
+    take_archive(&mut env, &class);
 }
 
 #[catch_panic(default = "std::ptr::null_mut()")]
 #[no_mangle]
 pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__I(
     mut env: JNIEnv,
-    class: JClass,
+    class: JObject,
     index: jint,
 ) -> jobject {
     let index = index as usize;
 
-    let mut zip = get_archive(&mut env, &*class);
+    let mut zip = get_archive(&mut env, &class);
     let result = zip.by_index(index);
 
     make_zip_entry(&mut env, result).into_raw()
@@ -104,12 +104,12 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__I
 #[no_mangle]
 pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__Ljava_lang_String_2(
     mut env: JNIEnv,
-    class: JClass,
+    class: JObject,
     path: JString,
 ) -> jobject {
     let path: String = env.get_string(&path).unwrap().into();
 
-    let mut zip = get_archive(&mut env, &*class);
+    let mut zip = get_archive(&mut env, &class);
     let result = zip.by_name(path.as_str());
 
     make_zip_entry(&mut env, result).into_raw()
@@ -117,10 +117,10 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__L
 
 #[catch_panic(default = "std::ptr::null_mut()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
-pub fn openEntryRaw(mut env: JNIEnv, class: JClass, index: jint) -> jobject {
+pub fn openEntryRaw(mut env: JNIEnv, class: JObject, index: jint) -> jobject {
     let index = index as usize;
 
-    let mut zip = get_archive(&mut env, &*class);
+    let mut zip = get_archive(&mut env, &class);
     let result = zip.by_index_raw(index);
 
     make_zip_entry(&mut env, result).into_raw()
@@ -128,22 +128,22 @@ pub fn openEntryRaw(mut env: JNIEnv, class: JClass, index: jint) -> jobject {
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
-pub fn getEntryCount(mut env: JNIEnv, class: JClass) -> jint {
-    let zip = get_archive(&mut env, &*class);
+pub fn getEntryCount(mut env: JNIEnv, class: JObject) -> jint {
+    let zip = get_archive(&mut env, &class);
     zip.len() as jint
 }
 
 #[catch_panic(default = "std::ptr::null_mut()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
-pub fn getRawComment(mut env: JNIEnv, class: JClass) -> jbyteArray {
-    let zip = get_archive(&mut env, &*class);
+pub fn getRawComment(mut env: JNIEnv, class: JObject) -> jbyteArray {
+    let zip = get_archive(&mut env, &class);
     env.byte_array_from_slice(zip.comment()).unwrap().into_raw()
 }
 
 #[catch_panic(default = "std::ptr::null_mut()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipReader")]
-pub fn getEntryNames(mut env: JNIEnv, class: JClass) -> jobjectArray {
-    let zip = get_archive(&mut env, &*class);
+pub fn getEntryNames(mut env: JNIEnv, class: JObject) -> jobjectArray {
+    let zip = get_archive(&mut env, &class);
     let names_length = zip.file_names().collect::<Vec<&str>>().len();
 
     let array = env
