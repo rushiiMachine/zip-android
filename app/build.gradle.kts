@@ -10,18 +10,18 @@ repositories {
 
 android {
     namespace = "com.github.diamondminer88.zip"
-    compileSdk = 33
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.github.diamondminer88.zip"
         minSdk = 24
-        targetSdk = 33
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
     }
 
     buildTypes {
-        named("debug") {
+        release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
         }
@@ -38,5 +38,5 @@ android {
 
 dependencies {
     implementation(project(":lib"))
-    implementation("androidx.core:core-ktx:1.9.0")
+    implementation("androidx.core:core-ktx:1.15.0")
 }

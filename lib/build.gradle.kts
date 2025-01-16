@@ -23,11 +23,10 @@ dependencies {
 
 android {
     namespace = "com.github.diamondminer88.zip"
-    compileSdk = 33
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 21
-        targetSdk = 33
 
         consumerProguardFile("consumer-rules.pro")
     }
@@ -68,6 +67,7 @@ task<Jar>("sourcesJar") {
 }
 
 task<Javadoc>("javadoc") {
+    dependsOn("generateReleaseRFile")
     source(android.sourceSets.named("main").get().java.srcDirs)
     options {
         title = "zip-android $version"
