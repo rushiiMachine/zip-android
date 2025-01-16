@@ -19,6 +19,11 @@ public class ZipEntry {
     }
 
     /**
+     * Get the index of this file in the archive.
+     */
+    public native int getIndex();
+
+    /**
      * Get the name of the file.
      * <br/>
      * It is dangerous to use this name directly when extracting an archive.

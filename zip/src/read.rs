@@ -180,6 +180,7 @@ impl<'a> ZipFileReader<'a> {
 
 /// A struct for reading a zip file
 pub struct ZipFile<'a> {
+    index: usize,
     data: Cow<'a, ZipFileData>,
     crypto_reader: Option<CryptoReader<'a>>,
     reader: ZipFileReader<'a>,
@@ -584,6 +585,7 @@ impl<R: Read + io::Seek> ZipArchive<R> {
             .ok_or(ZipError::FileNotFound)
             .and_then(move |data| {
                 Ok(ZipFile {
+                    index: file_number,
                     crypto_reader: None,
                     reader: ZipFileReader::Raw(find_content(data, reader)?),
                     data: Cow::Borrowed(data),
@@ -621,6 +623,7 @@ impl<R: Read + io::Seek> ZipArchive<R> {
             data.compressed_size,
         ) {
             Ok(Ok(crypto_reader)) => Ok(Ok(ZipFile {
+                index: file_number,
                 crypto_reader: Some(crypto_reader),
                 reader: ZipFileReader::NoReader,
                 data: Cow::Borrowed(data),
@@ -834,6 +837,12 @@ impl<'a> ZipFile<'a> {
             self.data.version_made_by / 10,
             self.data.version_made_by % 10,
         )
+    }
+
+    /// Get the index of this file starting from 0 in the archive.
+    /// This does not necessarily correspond to the data offset.
+    pub fn index(&self) -> usize {
+        self.index
     }
 
     /// Get the name of the file
@@ -1150,6 +1159,7 @@ pub fn read_zipfile_from_stream<'a, R: io::Read>(
     .unwrap();
 
     Ok(Some(ZipFile {
+        index: 0,
         data: Cow::Owned(result),
         crypto_reader: None,
         reader: make_reader(result_compression_method, result_crc32, crypto_reader),

@@ -30,6 +30,13 @@ fn take_entry<'a>(env: &mut JNIEnv<'a>, obj: JClass<'a>) -> ZipFile<'static> {
     take_field(env, obj, cache::ZipEntry_ptr()).unwrap()
 }
 
+#[catch_panic(default = "0")]
+#[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
+pub fn getIndex(mut env: JNIEnv, class: JClass) -> jint {
+    let entry = get_entry(&mut env, class);
+    entry.index() as jint
+}
+
 #[catch_panic(default = "std::ptr::null_mut()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getName(mut env: JNIEnv, class: JClass) -> jstring {
