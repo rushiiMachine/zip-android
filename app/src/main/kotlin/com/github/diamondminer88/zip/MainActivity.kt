@@ -12,10 +12,12 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val zipBytes = resources.openRawResource(R.raw.testzip).readBytes()
         val zipFile = File(this.externalCacheDir, "modified.zip")
         zipFile.createNewFile()
-        zipFile.writeBytes(resources.openRawResource(R.raw.testzip).readBytes())
+        zipFile.writeBytes(zipBytes)
 
+        // Test from file
         ZipReader(zipFile).use { zip ->
             Log.i(TAG, "Entry count: ${zip.entryCount}")
             Log.i(TAG, "Entries: ${zip.entryNames.joinToString()}")
@@ -55,6 +57,13 @@ class MainActivity : Activity() {
             Log.i(TAG, "uncompressed_aligned.txt aligned: ${(zip.openEntry("uncompressed_aligned.txt")!!.dataOffset and 0x3) == 0L}")
 
             zip.forEach { println("Entry: ${it.name} compressed size: ${it.compressedSize} raw size: ${it.size}") }
+        }
+
+        // Test from bytes
+        Log.i(TAG, "Reading from in memory byte array!")
+        ZipReader(zipBytes).use { zip ->
+            Log.i(TAG, "Entry count: ${zip.entryCount}")
+            Log.i(TAG, "Entries: ${zip.entryNames.joinToString()}")
         }
     }
 }

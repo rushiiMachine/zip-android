@@ -39,9 +39,22 @@ public class ZipReader implements Closeable, Iterable<ZipEntry> {
     }
 
     /**
+     * Open a zip with readonly operations
+     * @param data Zip file as a byte array
+     */
+    public ZipReader(byte @NotNull [] data) {
+        open(data);
+    }
+
+    /**
      * Opens an archive and sets {@link ZipReader#ptr} to the native data.
      */
     private native void open(String path);
+
+    /**
+     * Parses an archive and sets {@link ZipReader#ptr} to the native data.
+     */
+    private native void open(byte[] data);
 
     /**
      * Destructs the underlying native ZipArchive at {@link ZipReader#ptr}

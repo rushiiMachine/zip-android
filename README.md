@@ -45,6 +45,11 @@ ZipWriter(zipFile).use { zip ->
     // Write page-aligned (4096 byte) uncompressed entry (useful for writing zip aligned .so's)
     zip.writeEntry("lib.so", bytes, ZipCompression.NONE, 4096)
 }
+
+// Open zip reader from in memory byte array
+ZipReader(byteArrayOf(/* ... */)).use { zip ->
+    // Parsed zip from bytes!
+}
 ```
 
 ### Building Prerequisites
