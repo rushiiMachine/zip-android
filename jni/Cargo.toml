@@ -9,8 +9,13 @@ crate_type = ["cdylib"]
 [profile.dev]
 panic = "unwind"
 
+# Optimize for size
 [profile.release]
 panic = "unwind"
+strip = true
+opt-level = "s"
+lto = true
+codegen-units = 1
 
 [dependencies]
 zip = { path = "../zip", features = ["deflate-miniz", "bzip2", "zstd"], default-features = false }
