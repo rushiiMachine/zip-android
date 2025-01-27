@@ -13,7 +13,7 @@ use std::{fs::File, path::Path};
 use zip::{
     read::ZipFile,
     result::{ZipError, ZipResult},
-    ZipArchive, ZipWriter,
+    ZipArchive,
 };
 
 trait ReaderTrait: Read + Seek {}

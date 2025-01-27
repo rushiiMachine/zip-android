@@ -50,13 +50,13 @@ public class ZipWriter implements Closeable {
         open(file.getAbsolutePath(), append);
     }
 
-//    /**
-//     * Append to an existing archive.
-//     * @param data Existing archive's bytes
-//     */
-//    public ZipWriter(byte[] data) {
-//        open(data);
-//    }
+    /**
+     * Parse and append to an archive in memory.
+     * @param data Existing archive's bytes
+     */
+    public ZipWriter(byte[] data) {
+        open(data);
+    }
 
     /**
      * Opens/creates an archive to write to.
@@ -165,6 +165,12 @@ public class ZipWriter implements Closeable {
 
         deleteEntries(entriesArr);
     }
+
+    /**
+     * Finalizes the writer and returns the bytes, assuming this writer was opened via bytes.
+     * @throws IllegalStateException If this writer was not opened via {@link ZipWriter#ZipWriter(byte[])}.
+     */
+    public native byte[] toByteArray();
 
     /**
      * Finalizes the writer and saves to disk.
