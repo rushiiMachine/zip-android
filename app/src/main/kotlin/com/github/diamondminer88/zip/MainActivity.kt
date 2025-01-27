@@ -76,5 +76,16 @@ class MainActivity : Activity() {
             Log.i(TAG, "Entries: ${zip.entryNames.joinToString()}")
             Log.i(TAG, "balls.txt: ${zip.openEntry("balls.txt")!!.read().decodeToString()}")
         }
+
+        Log.i(TAG, "Writing to new empty in memory byte array!")
+        val newZipBytes2 = ZipWriter().use { zip ->
+            zip.writeEntry("balls2.txt", "ballsabc")
+            zip.toByteArray()
+        }
+        ZipReader(newZipBytes2).use { zip ->
+            Log.i(TAG, "Entry count: ${zip.entryCount}")
+            Log.i(TAG, "Entries: ${zip.entryNames.joinToString()}")
+            Log.i(TAG, "balls.txt: ${zip.openEntry("balls2.txt")!!.read().decodeToString()}")
+        }
     }
 }

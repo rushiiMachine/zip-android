@@ -98,11 +98,17 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open___3B(
     class: JObject,
     bytes: JByteArray,
 ) {
-    let bytes = env.convert_byte_array(bytes).unwrap();
-    let cursor = Cursor::new(bytes);
-    let writer: Box<dyn WriterTrait> = Box::new(cursor);
+    let marshaled_bytes = match bytes.is_null() {
+        false => env.convert_byte_array(&bytes).unwrap(),
+        true => Vec::with_capacity(4096),
+    };
+    let writer: Box<dyn WriterTrait> = Box::new(Cursor::new(marshaled_bytes));
 
-    let zip = match ZipWriter::new_append(writer) {
+    let zip_result = match bytes.is_null() {
+        false => ZipWriter::new_append(writer),
+        true => Ok(ZipWriter::new(writer)),
+    };
+    let zip = match zip_result {
         Ok(w) => w,
         Err(e) => {
             env.throw(format!("Failed to parse zip: {:?}", e)).unwrap();

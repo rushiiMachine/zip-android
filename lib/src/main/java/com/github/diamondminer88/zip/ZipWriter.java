@@ -59,6 +59,13 @@ public class ZipWriter implements Closeable {
     }
 
     /**
+     * Starts a new empty appendable archive in memory.
+     */
+    public ZipWriter() {
+        open(null);
+    }
+
+    /**
      * Opens/creates an archive to write to.
      * @param path   Path to archive
      * @param append Append to existing archive
