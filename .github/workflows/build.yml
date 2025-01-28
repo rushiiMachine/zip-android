@@ -1,0 +1,54 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches-ignore: [ 'release' ]
+
+jobs:
+  build:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: zulu
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            $GITHUB_WORKSPACE/jni/target/
+            $GITHUB_WORKSPACE/zip/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Setup Rust toolchain
+        run: |
+          rustup toolchain add --profile=minimal nightly
+          rustup default nightly
+          rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
+          cargo ndk --version || cargo install cargo-ndk
+
+      - name: Build
+        run: |
+          chmod +x gradlew
+          ./gradlew :lib:publishToMavenLocal --no-daemon --stacktrace
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: libziprs
+          path: ~/.m2/repository/**
