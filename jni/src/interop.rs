@@ -101,16 +101,6 @@ pub fn into_raw<T>(val: T) -> jlong {
     Box::into_raw(Box::new(ReentrantLock::new(val))) as jlong
 }
 
-macro_rules! non_null {
-    ( $obj:expr, $ctx:expr ) => {
-        if $obj.is_null() {
-            return Err(jni::errors::Error::NullPtr($ctx).into());
-        } else {
-            $obj
-        }
-    };
-}
-
 /// A port of `JNIEnv::set_rust_field` with type `T` modified to not require `Send`.
 /// It still preserves Mutex around the value, not for atomic access but for making sure
 /// the unique owner at the time it is taken.
@@ -135,7 +125,7 @@ pub fn get_field<'local, O, S, T>(
     env: &mut JNIEnv<'local>,
     obj: O,
     field: S,
-) -> JniResult<ReentrantReference<'local, T>>
+) -> JniResult<Option<ReentrantReference<'local, T>>>
 where
     O: AsRef<JObject<'local>>,
     S: Into<JFieldID>,
@@ -146,16 +136,23 @@ where
     let ptr = env
         .get_field_unchecked(&obj, field.into(), ReturnType::Primitive(Primitive::Long))?
         .j()? as *mut ReentrantLock<T>;
-    non_null!(ptr, "rust value from Java");
+
+    if ptr.is_null() {
+        return Ok(None);
+    }
 
     unsafe {
-        // dereferencing is safe, because we checked it for null
-        Ok((*ptr).lock().unwrap())
+        // SAFETY: deref is safe, because we checked it for null
+        Ok(Some((*ptr).lock().unwrap()))
     }
 }
 
 /// A port of `JNIEnv::take_rust_field` with type `T` modified to not require `Send`.
-pub fn take_field<'local, O, S, T>(env: &mut JNIEnv<'local>, obj: O, field_id: S) -> JniResult<T>
+pub fn take_field<'local, O, S, T>(
+    env: &mut JNIEnv<'local>,
+    obj: O,
+    field_id: S,
+) -> JniResult<Option<T>>
 where
     O: AsRef<JObject<'local>>,
     S: Into<JFieldID>,
@@ -169,7 +166,9 @@ where
             .get_field_unchecked(&obj, field_id, ReturnType::Primitive(Primitive::Long))?
             .j()? as *mut ReentrantLock<T>;
 
-        non_null!(ptr, "rust value from Java");
+        if ptr.is_null() {
+            return Ok(None);
+        }
 
         let mbox = unsafe { Box::from_raw(ptr) };
 
@@ -187,5 +186,5 @@ where
         mbox
     };
 
-    Ok(mbox.mutex.into_inner().unwrap())
+    Ok(Some(mbox.mutex.into_inner().unwrap()))
 }

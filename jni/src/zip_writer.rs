@@ -12,8 +12,7 @@ use jni::{
 };
 use jni_fn::jni_fn;
 
-use crate::cache;
-use crate::interop::{get_field, set_field, take_field, ReentrantReference};
+use crate::{cache, interop};
 use zip::result::ZipError;
 use zip::truncate::Truncate;
 use zip::write::FileOptions;
@@ -33,19 +32,33 @@ impl WriterTrait for Cursor<Vec<u8>> {
     }
 }
 
-fn set_writer<'a>(env: &mut JNIEnv<'a>, obj: JObject<'a>, zip: ZipWriter<Box<dyn WriterTrait>>) {
-    set_field(env, obj, cache::ZipWriter_ptr(), zip).unwrap()
-}
+/// Obtains an exclusive reference to the rust writer from a pointer in a JVM class.
+macro_rules! obtain_writer {
+    (get, &mut $env:ident, &$class:ident, $ret_value:expr) => {
+        obtain_writer!(__$env, $class, get_field, $ret_value)
+    };
+    (take, &mut $env:ident, &$class:ident, $ret_value:expr) => {
+        obtain_writer!(__$env, $class, take_field, $ret_value)
+    };
+    (__$env:ident, $class:ident, $method:ident, $ret_value:expr) => {{
+        let writer = crate::interop::$method::<_, _, ZipWriter<Box<dyn WriterTrait>>>(
+            &mut $env,
+            &$class,
+            crate::cache::ZipWriter_ptr(),
+        );
 
-fn get_writer<'a>(
-    env: &mut JNIEnv<'a>,
-    obj: JObject<'a>,
-) -> ReentrantReference<'a, ZipWriter<Box<dyn WriterTrait>>> {
-    get_field(env, obj, cache::ZipWriter_ptr()).unwrap()
-}
-
-fn take_writer<'a>(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> ZipWriter<Box<dyn WriterTrait>> {
-    take_field(env, obj, cache::ZipWriter_ptr()).unwrap()
+        match writer.unwrap() {
+            Some(w) => w,
+            None => {
+                $env.throw((
+                    "java/lang/IllegalStateException",
+                    "Cannot use a closed writer!",
+                ))
+                .unwrap();
+                return $ret_value;
+            }
+        }
+    }};
 }
 
 #[catch_panic]
@@ -88,7 +101,7 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open__Ljava_
         }
     };
 
-    set_writer(&mut env, class, zip);
+    interop::set_field(&mut env, &class, cache::ZipWriter_ptr(), zip).unwrap();
 }
 
 #[catch_panic]
@@ -116,14 +129,14 @@ pub extern "system" fn Java_com_github_diamondminer88_zip_ZipWriter_open___3B(
         }
     };
 
-    set_writer(&mut env, class, zip);
+    interop::set_field(&mut env, &class, cache::ZipWriter_ptr(), zip).unwrap();
 }
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
 pub fn setComment(mut env: JNIEnv, class: JObject, bytes: JByteArray) {
+    let mut writer = obtain_writer!(get, &mut env, &class, ());
     let bytes = env.convert_byte_array(bytes).unwrap();
-    let mut writer = get_writer(&mut env, class);
 
     writer.set_raw_comment(bytes);
 }
@@ -138,7 +151,7 @@ pub fn writeEntry(
     compression: jbyte,
     alignment: jshort,
 ) {
-    let mut writer = get_writer(&mut env, class);
+    let mut writer = obtain_writer!(get, &mut env, &class, ());
     let bytes = env.convert_byte_array(bytes).unwrap();
     let path = env.get_string(&path).unwrap();
     let alignment = alignment as u16;
@@ -171,17 +184,19 @@ pub fn writeEntry(
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
 pub fn writeDir(mut env: JNIEnv, class: JObject, path: JString) {
+    let mut writer = obtain_writer!(get, &mut env, &class, ());
     let path = env.get_string(&path).unwrap();
-    let mut writer = get_writer(&mut env, class);
 
     let options = FileOptions::default().compression_method(CompressionMethod::Stored);
     writer.add_directory(path, options).unwrap();
 }
 
-#[catch_panic(default = "std::ptr::null_mut()")]
+#[catch_panic(default = "JObject::null().into_raw()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
 pub fn toByteArray(mut env: JNIEnv, class: JObject) -> jbyteArray {
-    match take_writer(&mut env, class).finish() {
+    let mut writer = obtain_writer!(take, &mut env, &class, JObject::null().into_raw());
+
+    match writer.finish() {
         Err(e) => {
             env.throw(format!("Failed to close zip: {:?}", e)).unwrap();
             JObject::null().into_raw()
@@ -200,10 +215,14 @@ pub fn toByteArray(mut env: JNIEnv, class: JObject) -> jbyteArray {
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
 pub fn close(mut env: JNIEnv, class: JObject) {
-    let writer = take_field(&mut env, &class, cache::ZipWriter_ptr());
-    let mut writer: ZipWriter<Box<dyn WriterTrait>> = match writer {
-        Ok(w) => w,
-        Err(_) => return,
+    let writer = interop::take_field::<_, _, ZipWriter<Box<dyn WriterTrait>>>(
+        &mut env,
+        &class,
+        cache::ZipWriter_ptr(),
+    );
+    let mut writer = match writer {
+        Ok(Some(w)) => w,
+        _ => return,
     };
 
     match writer.finish() {
@@ -215,9 +234,9 @@ pub fn close(mut env: JNIEnv, class: JObject) {
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
 pub fn deleteEntry(mut env: JNIEnv, class: JObject, path: JString, fill_void: jboolean) {
+    let mut writer = obtain_writer!(get, &mut env, &class, ());
     let path = env.get_string(&path).unwrap();
     let fill_void = fill_void == 1;
-    let mut writer = get_writer(&mut env, class);
 
     if let Err(err) = writer.remove_file(path, fill_void) {
         match err {
@@ -235,6 +254,7 @@ pub fn deleteEntry(mut env: JNIEnv, class: JObject, path: JString, fill_void: jb
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipWriter")]
 pub fn deleteEntries(mut env: JNIEnv, class: JObject, entries: JObjectArray) {
+    let mut writer = obtain_writer!(get, &mut env, &class, ());
     let entries_len = env.get_array_length(&entries).unwrap() as usize;
     let entries: Vec<String> = (0..entries_len)
         .map(|i| {
@@ -243,8 +263,6 @@ pub fn deleteEntries(mut env: JNIEnv, class: JObject, entries: JObjectArray) {
             env.get_string((&*obj).into()).unwrap().into()
         })
         .collect();
-
-    let mut writer = get_writer(&mut env, class);
 
     for name in entries {
         if let Err(err) = writer.remove_file(name, false) {

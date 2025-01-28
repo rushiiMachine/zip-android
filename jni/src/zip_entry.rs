@@ -14,47 +14,51 @@ use jni_fn::jni_fn;
 use zip::read::ZipFile;
 use zip::CompressionMethod;
 
-use crate::{
-    cache,
-    interop::{get_field, take_field, ReentrantReference},
-};
+use crate::{cache, interop};
 
-fn get_entry<'a>(
-    env: &mut JNIEnv<'a>,
-    obj: JObject<'a>,
-) -> ReentrantReference<'a, ZipFile<'static>> {
-    get_field(env, obj, cache::ZipEntry_ptr()).unwrap()
-}
+/// Obtains an exclusive reference to the rust zip entry from a pointer in a JVM class.
+macro_rules! obtain_entry {
+    (&mut $env:ident, &$class:ident) => {{
+        let entry = crate::interop::get_field::<_, _, ZipFile<'static>>(
+            &mut $env,
+            &$class,
+            crate::cache::ZipEntry_ptr(),
+        );
 
-fn take_entry<'a>(env: &mut JNIEnv<'a>, obj: JObject<'a>) -> ZipFile<'static> {
-    take_field(env, obj, cache::ZipEntry_ptr()).unwrap()
+        entry
+            .unwrap()
+            .expect("using a closed entry, after JVM finalizer called!")
+    }};
 }
 
 #[catch_panic(default = "0")]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getIndex(mut env: JNIEnv, class: JObject) -> jint {
-    let entry = get_entry(&mut env, class);
+    let entry = obtain_entry!(&mut env, &class);
     entry.index() as jint
 }
 
-#[catch_panic(default = "std::ptr::null_mut()")]
+#[catch_panic(default = "JObject::null().into_raw()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getName(mut env: JNIEnv, class: JObject) -> jstring {
-    let entry = get_entry(&mut env, class);
+    let entry = obtain_entry!(&mut env, &class);
+
     env.new_string(entry.name()).unwrap().into_raw()
 }
 
-#[catch_panic(default = "std::ptr::null_mut()")]
+#[catch_panic(default = "JObject::null().into_raw()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getComment(mut env: JNIEnv, class: JObject) -> jstring {
-    let entry = get_entry(&mut env, class);
+    let entry = obtain_entry!(&mut env, &class);
+
     env.new_string(entry.comment()).unwrap().into_raw()
 }
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub unsafe fn getLastModified(mut env: JNIEnv, class: JObject) -> jlong {
-    let modified = get_entry(&mut env, class).last_modified();
+    let entry = obtain_entry!(&mut env, &class);
+    let modified = entry.last_modified();
     let args: Vec<jvalue> = vec![
         JValue::from(modified.year() - 1900).as_jni(),
         JValue::from(modified.month() - 1).as_jni(),
@@ -80,28 +84,28 @@ pub unsafe fn getLastModified(mut env: JNIEnv, class: JObject) -> jlong {
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn isDir(mut env: JNIEnv, class: JObject) -> jboolean {
-    let entry = get_entry(&mut env, class);
+    let entry = obtain_entry!(&mut env, &class);
     entry.is_dir().into()
 }
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getMode(mut env: JNIEnv, class: JObject) -> jint {
-    let entry = get_entry(&mut env, class);
+    let entry = obtain_entry!(&mut env, &class);
     entry.unix_mode().unwrap_or(0) as i32
 }
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getCRC32(mut env: JNIEnv, class: JObject) -> jint {
-    let entry = get_entry(&mut env, class);
+    let entry = obtain_entry!(&mut env, &class);
     entry.crc32() as i32
 }
 
-#[catch_panic(default = "std::ptr::null_mut()")]
+#[catch_panic(default = "JObject::null().into_raw()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getExtraData(mut env: JNIEnv, class: JObject) -> jbyteArray {
-    let entry = get_entry(&mut env, class);
+    let entry = obtain_entry!(&mut env, &class);
     env.byte_array_from_slice(entry.extra_data())
         .unwrap()
         .into_raw()
@@ -110,14 +114,14 @@ pub fn getExtraData(mut env: JNIEnv, class: JObject) -> jbyteArray {
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getSize(mut env: JNIEnv, class: JObject) -> jlong {
-    let entry = get_entry(&mut env, class);
+    let entry = obtain_entry!(&mut env, &class);
     entry.size() as i64
 }
 
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getCompressedSize(mut env: JNIEnv, class: JObject) -> jlong {
-    let entry = get_entry(&mut env, class);
+    let entry = obtain_entry!(&mut env, &class);
     entry.compressed_size() as i64
 }
 
@@ -125,7 +129,7 @@ pub fn getCompressedSize(mut env: JNIEnv, class: JObject) -> jlong {
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn _getCompression(mut env: JNIEnv, class: JObject) -> jlong {
-    let entry = get_entry(&mut env, class);
+    let entry = obtain_entry!(&mut env, &class);
     match entry.compression() {
         CompressionMethod::Unsupported(_) => -1,
         CompressionMethod::Stored => 0,
@@ -139,14 +143,14 @@ pub fn _getCompression(mut env: JNIEnv, class: JObject) -> jlong {
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn getDataOffset(mut env: JNIEnv, class: JObject) -> jlong {
-    let entry = get_entry(&mut env, class);
+    let entry = obtain_entry!(&mut env, &class);
     entry.data_start() as i64
 }
 
-#[catch_panic(default = "std::ptr::null_mut()")]
+#[catch_panic(default = "JObject::null().into_raw()")]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn read(mut env: JNIEnv, class: JObject) -> jbyteArray {
-    let mut entry = get_entry(&mut env, class);
+    let mut entry = obtain_entry!(&mut env, &class);
 
     if entry.is_dir() {
         env.throw("Cannot read data from a dir entry!").unwrap();
@@ -162,5 +166,5 @@ pub fn read(mut env: JNIEnv, class: JObject) -> jbyteArray {
 #[catch_panic]
 #[jni_fn("com.github.diamondminer88.zip.ZipEntry")]
 pub fn _finalize(mut env: JNIEnv, class: JObject) {
-    take_entry(&mut env, class);
+    let _ = interop::take_field::<_, _, ZipFile<'static>>(&mut env, &class, cache::ZipEntry_ptr());
 }

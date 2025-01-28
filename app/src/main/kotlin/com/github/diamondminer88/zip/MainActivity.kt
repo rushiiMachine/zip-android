@@ -70,7 +70,7 @@ class MainActivity : Activity() {
         val newZipBytes = ZipWriter(zipBytes).use { zip ->
             zip.writeEntry("balls.txt", "balls")
             zip.toByteArray()
-        }
+        } // Tests double close()
         ZipReader(newZipBytes).use { zip ->
             Log.i(TAG, "Entry count: ${zip.entryCount}")
             Log.i(TAG, "Entries: ${zip.entryNames.joinToString()}")
