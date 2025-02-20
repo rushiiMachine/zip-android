@@ -68,21 +68,39 @@ public class ZipReader implements Closeable, Iterable<ZipEntry> {
      * @param index Index of the file.
      */
     @Nullable
-    public native ZipEntry openEntry(int index);
+    public ZipEntry openEntry(int index) {
+        return openEntry0(index, null, false);
+    }
 
     /**
      * Search for a file entry by name. Returns null if entry not found.
      * @param path Path to the file inside the archive.
      */
     @Nullable
-    public native ZipEntry openEntry(@NotNull String path);
+    public ZipEntry openEntry(@NotNull String path) {
+        return openEntry0(-1, path, false);
+    }
 
     /**
      * Get a contained file by index without decompressing it.
      * @param index Index of the file.
      */
     @Nullable
-    public native ZipEntry openEntryRaw(int index);
+    public ZipEntry openEntryRaw(int index) {
+        return openEntry0(index, null, true);
+    }
+
+    /**
+     * Search for a file entry by name. Returns null if entry not found.
+     * Gets the contained file without decompressing it.
+     * @param path Path to the file inside the archive.
+     */
+    @Nullable
+    public ZipEntry openEntryRaw(@NotNull String path) {
+        return openEntry0(-1, path, true);
+    }
+
+    private native ZipEntry openEntry0(int index, @Nullable String name, boolean raw);
 
     /**
      * Number of files contained in this archive.

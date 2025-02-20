@@ -526,18 +526,24 @@ impl<R: Read + io::Seek> ZipArchive<R> {
         name: &str,
         password: &[u8],
     ) -> ZipResult<Result<ZipFile<'a>, InvalidPassword>> {
-        self.by_name_with_optional_password(name, Some(password))
+        self.by_name_with_optional_password(name, Some(password), false)
     }
 
     /// Search for a file entry by name
     pub fn by_name<'a>(&'a mut self, name: &str) -> ZipResult<ZipFile<'a>> {
-        Ok(self.by_name_with_optional_password(name, None)?.unwrap())
+        Ok(self.by_name_with_optional_password(name, None, false)?.unwrap())
+    }
+
+    /// Search for a file entry by name without decompressing it
+    pub fn by_name_raw<'a>(&'a mut self, name: &str) -> ZipResult<ZipFile<'a>> {
+        Ok(self.by_name_with_optional_password(name, None, true)?.unwrap())
     }
 
     fn by_name_with_optional_password<'a>(
         &'a mut self,
         name: &str,
         password: Option<&[u8]>,
+        raw: bool,
     ) -> ZipResult<Result<ZipFile<'a>, InvalidPassword>> {
         let index = match self.shared.names_map.get(name) {
             Some(index) => *index,
@@ -545,7 +551,7 @@ impl<R: Read + io::Seek> ZipArchive<R> {
                 return Err(ZipError::FileNotFound);
             }
         };
-        self.by_index_with_optional_password(index, password)
+        self.by_index_with_optional_password(index, password, raw)
     }
 
     /// Get a contained file by index, decrypt with given password
@@ -566,13 +572,13 @@ impl<R: Read + io::Seek> ZipArchive<R> {
         file_number: usize,
         password: &[u8],
     ) -> ZipResult<Result<ZipFile<'a>, InvalidPassword>> {
-        self.by_index_with_optional_password(file_number, Some(password))
+        self.by_index_with_optional_password(file_number, Some(password), false)
     }
 
     /// Get a contained file by index
     pub fn by_index(&mut self, file_number: usize) -> ZipResult<ZipFile<'_>> {
         Ok(self
-            .by_index_with_optional_password(file_number, None)?
+            .by_index_with_optional_password(file_number, None, false)?
             .unwrap())
     }
 
@@ -597,12 +603,22 @@ impl<R: Read + io::Seek> ZipArchive<R> {
         &'a mut self,
         file_number: usize,
         mut password: Option<&[u8]>,
+        raw: bool,
     ) -> ZipResult<Result<ZipFile<'a>, InvalidPassword>> {
         let data = self
             .shared
             .files
             .get(file_number)
             .ok_or(ZipError::FileNotFound)?;
+
+        if raw {
+            return Ok(Ok(ZipFile {
+                index: file_number,
+                crypto_reader: None,
+                reader: ZipFileReader::Raw(find_content(data, &mut self.reader)?),
+                data: Cow::Borrowed(data),
+            }))
+        }
 
         match (password, data.encrypted) {
             (None, true) => return Err(ZipError::UnsupportedArchive(ZipError::PASSWORD_REQUIRED)),

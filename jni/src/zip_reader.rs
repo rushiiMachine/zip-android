@@ -1,6 +1,7 @@
 use crate::{cache, interop};
 use catch_panic::catch_panic;
 use jni::objects::JByteArray;
+use jni::sys::jboolean;
 use jni::{
     objects::{JObject, JString},
     sys::{jbyteArray, jint, jobject, jobjectArray, jsize},
@@ -9,11 +10,7 @@ use jni::{
 use jni_fn::jni_fn;
 use std::io::{Cursor, Read, Seek};
 use std::{fs::File, path::Path};
-use zip::{
-    read::ZipFile,
-    result::{ZipError, ZipResult},
-    ZipArchive,
-};
+use zip::{result::ZipError, ZipArchive};
 
 trait ReaderTrait: Read + Seek {}
 impl<T: Read + Seek> ReaderTrait for T {}
@@ -39,27 +36,6 @@ macro_rules! obtain_reader {
             }
         }
     }};
-}
-
-fn make_zip_entry<'a>(env: &mut JNIEnv<'a>, zip_result: ZipResult<ZipFile>) -> JObject<'a> {
-    let zip_file = match zip_result {
-        Ok(file) => file,
-        Err(ZipError::FileNotFound) => {
-            return JObject::null().into();
-        }
-        Err(e) => {
-            env.throw(format!("Failed to open zip entry! {:?}", e))
-                .unwrap();
-            return JObject::null().into();
-        }
-    };
-
-    let zip_entry = unsafe {
-        env.new_object_unchecked(&cache::ZipEntry(), cache::ZipEntry_ctor(), &[])
-            .unwrap()
-    };
-    interop::set_field(env, &zip_entry, cache::ZipEntry_ptr(), zip_file).unwrap();
-    zip_entry
 }
 
 #[catch_panic]
@@ -124,44 +100,47 @@ pub fn close(mut env: JNIEnv, class: JObject) {
 }
 
 #[catch_panic(default = "JObject::null().into_raw()")]
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__I(
+#[jni_fn("com.github.diamondminer88.zip.ZipReader")]
+pub fn openEntry0(
     mut env: JNIEnv,
     class: JObject,
     index: jint,
+    name: JString,
+    raw: jboolean,
 ) -> jobject {
+    let raw = raw == 1;
     let index = index as usize;
+    let name: Option<String> = match name.is_null() {
+        true => None,
+        false => Some(env.get_string(&name).unwrap().into()),
+    };
     let mut zip = obtain_reader!(&mut env, &class, JObject::null().into_raw());
 
-    let result = zip.by_index(index);
+    let zip_result = match (raw, name) {
+        (false, Some(name)) => zip.by_name(&*name),
+        (true, Some(name)) => zip.by_name_raw(&*name),
+        (false, None) => zip.by_index(index),
+        (true, None) => zip.by_index_raw(index),
+    };
+    let zip_file = match zip_result {
+        Ok(file) => file,
+        Err(ZipError::FileNotFound) => {
+            return JObject::null().into_raw();
+        }
+        Err(e) => {
+            env.throw(format!("Failed to open zip entry! {:?}", e))
+                .unwrap();
+            return JObject::null().into_raw();
+        }
+    };
 
-    make_zip_entry(&mut env, result).into_raw()
-}
+    let zip_entry = unsafe {
+        env.new_object_unchecked(&cache::ZipEntry(), cache::ZipEntry_ctor(), &[])
+            .unwrap()
+    };
+    interop::set_field(&mut env, &zip_entry, cache::ZipEntry_ptr(), zip_file).unwrap();
 
-#[catch_panic(default = "JObject::null().into_raw()")]
-#[no_mangle]
-pub extern "system" fn Java_com_github_diamondminer88_zip_ZipReader_openEntry__Ljava_lang_String_2(
-    mut env: JNIEnv,
-    class: JObject,
-    path: JString,
-) -> jobject {
-    let mut zip = obtain_reader!(&mut env, &class, JObject::null().into_raw());
-    let path: String = env.get_string(&path).unwrap().into();
-
-    let result = zip.by_name(path.as_str());
-
-    make_zip_entry(&mut env, result).into_raw()
-}
-
-#[catch_panic(default = "JObject::null().into_raw()")]
-#[jni_fn("com.github.diamondminer88.zip.ZipReader")]
-pub fn openEntryRaw(mut env: JNIEnv, class: JObject, index: jint) -> jobject {
-    let index = index as usize;
-    let mut zip = obtain_reader!(&mut env, &class, JObject::null().into_raw());
-
-    let result = zip.by_index_raw(index);
-
-    make_zip_entry(&mut env, result).into_raw()
+    zip_entry.into_raw()
 }
 
 #[catch_panic]
