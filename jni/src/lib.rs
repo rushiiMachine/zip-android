@@ -8,6 +8,7 @@ use jni::{
     sys::{jint, JNI_VERSION_1_6},
     JavaVM,
 };
+use log::error;
 
 mod cache;
 mod interop;
@@ -17,9 +18,21 @@ mod zip_writer;
 
 #[no_mangle]
 pub unsafe extern "system" fn JNI_OnLoad(vm: JavaVM, _reserved: c_void) -> jint {
-    let env = vm.get_env().unwrap();
+    #[cfg(debug_assertions)]
+    android_log::init("zip-android").unwrap();
 
-    if !cache::init(env) {
+    let mut env = vm.get_env().unwrap();
+
+    if let Err(err) = cache::init(&mut env) {
+        error!("Failed to initialize cache: {err}");
+
+        // I can't leave this function with a thrown exception, otherwise
+        // the VM will crash internally for some reason.
+        if matches!(err, jni::errors::Error::JavaException) {
+            env.exception_describe().unwrap();
+            env.exception_clear().unwrap();
+        }
+
         return JNI_ERR;
     }
 

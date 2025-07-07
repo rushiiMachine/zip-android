@@ -1,4 +1,3 @@
-use catch_panic::catch_panic;
 use jni::objects::{GlobalRef, JFieldID, JMethodID, JStaticMethodID};
 use jni::JNIEnv;
 use std::sync::Mutex;
@@ -53,41 +52,35 @@ cache_ref!(ZipEntry: GlobalRef);
 cache_ref!(ZipEntry_ctor: JMethodID);
 cache_ref!(ZipEntry_ptr: JFieldID);
 
-#[catch_panic(default = "false")]
-pub(super) fn init(mut env: JNIEnv) -> bool {
-    fn class_ref(env: &mut JNIEnv, name: &str) -> GlobalRef {
-        env.find_class(name)
-            .and_then(|cls| env.new_global_ref(cls))
-            .expect("failed to get class for jni_cache member")
-    }
-
-    // TODO: better errors when failing to unwrap so users can figure out proguard issues
-
+pub(super) fn init(env: &mut JNIEnv) -> jni::errors::Result<()> {
     // Java Stdlib
-    init_String(class_ref(&mut env, "java/lang/String"));
-    init_Date(class_ref(&mut env, "java/util/Date"));
-    init_Date_UTC(
-        env.get_static_method_id(&Date(), "UTC", "(IIIIII)J")
-            .unwrap(),
-    );
+    init_String(env
+        .find_class("java/lang/String")
+        .and_then(|cls| env.new_global_ref(cls))?);
+    init_Date(env
+        .find_class("java/util/Date")
+        .and_then(|cls| env.new_global_ref(cls))?);
+    init_Date_UTC(env
+        .get_static_method_id(&Date(), "UTC", "(IIIIII)J")?);
 
     // zip-android
-    init_ZipReader(class_ref(
-        &mut env,
-        "com/github/diamondminer88/zip/ZipReader",
-    ));
-    init_ZipReader_ptr(env.get_field_id(&ZipReader(), "ptr", "J").unwrap());
-    init_ZipWriter(class_ref(
-        &mut env,
-        "com/github/diamondminer88/zip/ZipWriter",
-    ));
-    init_ZipWriter_ptr(env.get_field_id(&ZipWriter(), "ptr", "J").unwrap());
-    init_ZipEntry(class_ref(
-        &mut env,
-        "com/github/diamondminer88/zip/ZipEntry",
-    ));
-    init_ZipEntry_ctor(env.get_method_id(&ZipEntry(), "<init>", "()V").unwrap());
-    init_ZipEntry_ptr(env.get_field_id(&ZipEntry(), "ptr", "J").unwrap());
+    init_ZipReader(env
+        .find_class("com/github/diamondminer88/zip/ZipReader")
+        .and_then(|cls| env.new_global_ref(cls))?);
+    init_ZipReader_ptr(env
+        .get_field_id(&ZipReader(), "ptr", "J")?);
+    init_ZipWriter(env
+        .find_class("com/github/diamondminer88/zip/ZipWriter")
+        .and_then(|cls| env.new_global_ref(cls))?);
+    init_ZipWriter_ptr(env
+        .get_field_id(&ZipWriter(), "ptr", "J")?);
+    init_ZipEntry(env
+        .find_class("com/github/diamondminer88/zip/ZipEntry")
+        .and_then(|cls| env.new_global_ref(cls))?);
+    init_ZipEntry_ctor(env
+        .get_method_id(&ZipEntry(), "<init>", "()V")?);
+    init_ZipEntry_ptr(env
+        .get_field_id(&ZipEntry(), "ptr", "J")?);
 
-    true
+    Ok(())
 }
