@@ -1,6 +1,5 @@
 package com.github.diamondminer88.zip;
 
-import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,7 +18,6 @@ public class ZipReader implements Closeable, Iterable<ZipEntry> {
     /**
      * Internal pointer to ZipArchive struct
      */
-    @Internal
     private final long ptr = 0;
 
     /**
