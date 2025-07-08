@@ -57,12 +57,12 @@ tasks.getByName<Delete>("clean") {
     delete("../zip/target")
 }
 
-task<Jar>("sourcesJar") {
+tasks.register<Jar>("sourcesJar") {
     from(android.sourceSets.named("main").get().java.srcDirs)
     archiveClassifier.set("sources")
 }
 
-task<Javadoc>("javadoc") {
+tasks.register<Javadoc>("javadoc") {
     dependsOn("generateReleaseRFile")
     source(android.sourceSets.named("main").get().java.srcDirs)
     options {
@@ -88,7 +88,7 @@ task<Javadoc>("javadoc") {
     }
 }
 
-task<Jar>("javadocJar") {
+tasks.register<Jar>("javadocJar") {
     from(tasks["javadoc"].outputs)
     archiveClassifier.set("javadoc")
 }

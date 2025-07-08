@@ -1094,7 +1094,7 @@ fn deflate_compression_level_range() -> std::ops::RangeInclusive<i32> {
 
 #[cfg(feature = "bzip2")]
 fn bzip2_compression_level_range() -> std::ops::RangeInclusive<i32> {
-    let min = bzip2::Compression::none().level() as i32;
+    let min = bzip2::Compression::fast().level() as i32;
     let max = bzip2::Compression::best().level() as i32;
     min..=max
 }
