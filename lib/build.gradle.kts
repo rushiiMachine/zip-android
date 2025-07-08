@@ -3,7 +3,7 @@
 import org.gradle.kotlin.dsl.support.listFilesOrdered
 
 group = "com.github.diamondminer88"
-version = "2.2.0"
+version = "2.3.0"
 
 plugins {
     id("com.android.library")
@@ -18,12 +18,12 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.jetbrains:annotations:23.0.0")
+    compileOnly("org.jetbrains:annotations:26.0.2")
 }
 
 android {
     namespace = "com.github.diamondminer88.zip"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 21
