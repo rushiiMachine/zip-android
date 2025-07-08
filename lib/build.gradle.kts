@@ -1,7 +1,5 @@
 @file:Suppress("UnstableApiUsage")
 
-import org.gradle.kotlin.dsl.support.listFilesOrdered
-
 group = "com.github.diamondminer88"
 version = "2.3.0"
 
@@ -22,6 +20,7 @@ dependencies {
 
 android {
     namespace = "com.github.diamondminer88.zip"
+    ndkVersion = "29.0.13599879" // r28+ compiles for 16-KiB aligned pages by default
     compileSdk = 36
 
     defaultConfig {
@@ -39,8 +38,6 @@ android {
         buildConfig = false
         resValues = false
     }
-
-    ndkVersion = sdkDirectory.resolve("ndk").listFilesOrdered().last().name
 }
 
 cargo {
