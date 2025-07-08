@@ -1,9 +1,15 @@
-# zip-android ![Maven central version](https://img.shields.io/maven-central/v/io.github.diamondminer88/zip-android?style=flat-square) 
+# zip-android ![Maven central version](https://img.shields.io/maven-central/v/io.github.diamondminer88/zip-android?style=flat-square)
 
 Android JNI bindings for [zip-rs](https://github.com/zip-rs/zip), a native rust zip library.
 
 This has significant performance improvements compared to similar libraries
 written in JVM languages.
+
+### Prerequisites
+
+- Android 5 - 16 (API 21 - 36)
+- `x86`, `x86_64`, `armeabiv7`, `arm64`, `riscv64`
+- 4KiB or 16KiB page alignment
 
 ### Installation
 
@@ -13,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    implementation("io.github.diamondminer88:zip-android:2.3.0")
+    implementation("io.github.diamondminer88:zip-android:2.3.1")
 }
 ```
 
@@ -74,6 +80,8 @@ val modifiedZipBytes = ZipWriter(byteArrayOf(/* ... */)).use { zip ->
 The available compression methods are: `Stored` (none), `Deflate` (default), `Bzip2`, and `Zstd`.
 
 ### Building Prerequisites
+
 1. `rustup install nightly && rustup default nightly`
-2. `rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android`
+2.
+`rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android`
 3. `cargo install --force cargo-ndk`
