@@ -8,8 +8,7 @@ version = "2.3.0"
 plugins {
     id("com.android.library")
     id("org.mozilla.rust-android-gradle.rust-android")
-    id("maven-publish")
-    id("signing")
+    id("com.vanniktech.maven.publish")
 }
 
 repositories {
@@ -97,82 +96,41 @@ task<Jar>("javadocJar") {
     archiveClassifier.set("javadoc")
 }
 
-// Must be after evaluation to get the bundleReleaseAar artifact
-afterEvaluate {
-    publishing {
-        publications {
-            register("zip-android", MavenPublication::class) {
-                artifactId = "zip-android"
-                groupId = "io.github.diamondminer88"
+mavenPublishing {
+    publishToMavenCentral()
+    coordinates("io.github.diamondminer88", "zip-android")
 
-                artifact(tasks["sourcesJar"])
-                artifact(tasks["javadocJar"])
-                artifact(tasks["bundleReleaseAar"])
-                artifact(tasks["bundleLibCompileToJarRelease"].outputs.files.singleFile) {
-                    builtBy(tasks["bundleLibCompileToJarRelease"])
-                }
+    pom {
+        name = "zip-android"
+        description = "Native zip library + java interface for android"
+        url = "https://github.com/rushiiMachine/zip-android"
+        inceptionYear = "2022"
 
-                pom {
-                    name.set("zip-android")
-                    description.set("Native zip library + java interface for android")
-                    url.set("https://github.com/rushiiMachine/zip-android")
-                    licenses {
-                        license {
-                            name.set("Apache 2.0 license")
-                            url.set("https://github.com/rushiiMachine/zip-android/blob/master/LICENSE")
-                            comments.set("zip-android, thiserror, jni_fn, jni license")
-                        }
-                        license {
-                            name.set("MIT license")
-                            url.set("https://github.com/zip-rs/zip/blob/master/LICENSE")
-                            comments.set("zip-rs, thiserror, jni_fn, jni license")
-                        }
-                    }
-
-                    developers {
-                        developer {
-                            id.set("rushii")
-                            name.set("rushii")
-                            url.set("https://github.com/rushiiMachine/")
-                        }
-                    }
-
-                    scm {
-                        url.set("https://github.com/rushiiMachine/zip-android")
-                        connection.set("scm:git:github.com/rushiiMachine/zip-android.git")
-                        developerConnection.set("scm:git:ssh://github.com/rushiiMachine/zip-android.git")
-                    }
-                }
+        licenses {
+            license {
+                name = "Apache 2.0 license"
+                url = "https://github.com/rushiiMachine/zip-android/blob/master/LICENSE"
+                comments = "zip-android, thiserror, jni_fn, jni license"
+            }
+            license {
+                name = "MIT license"
+                url = "https://github.com/zip-rs/zip/blob/master/LICENSE"
+                comments = "zip-rs, thiserror, jni_fn, jni license"
             }
         }
 
-        repositories {
-            val sonatypeUsername = System.getenv("SONATYPE_USERNAME")
-            val sonatypePassword = System.getenv("SONATYPE_PASSWORD")
-
-            if (sonatypeUsername == null || sonatypePassword == null)
-                mavenLocal()
-            else {
-                maven {
-                    name = "sonatype"
-                    credentials {
-                        username = sonatypeUsername
-                        password = sonatypePassword
-                    }
-                    setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-                }
+        developers {
+            developer {
+                id = "rushii"
+                name = "rushii"
+                url = "https://github.com/rushiiMachine/"
             }
         }
-    }
 
-    if (System.getenv("SONATYPE_USERNAME") != null) {
-        signing {
-            useInMemoryPgpKeys(
-                System.getenv("SIGNING_KEY_ID"),
-                System.getenv("SIGNING_KEY"),
-                System.getenv("SIGNING_PASSWORD"),
-            )
-            sign(publishing.publications)
+        scm {
+            url = "https://github.com/rushiiMachine/zip-android"
+            connection = "scm:git:github.com/rushiiMachine/zip-android.git"
+            developerConnection = "scm:git:ssh://github.com/rushiiMachine/zip-android.git"
         }
     }
 }
