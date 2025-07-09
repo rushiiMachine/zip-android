@@ -19,10 +19,12 @@ jobs:
         with:
           java-version: 21
           distribution: zulu
-          cache: gradle
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: tools ndk;29.0.13599879
+          log-accepted-android-sdk-licenses: false
 
       - uses: actions/cache@v4
         with:

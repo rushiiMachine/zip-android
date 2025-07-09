@@ -33,6 +33,9 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: tools ndk;29.0.13599879
+          log-accepted-android-sdk-licenses: false
 
       - name: Setup Rust toolchain
         run: |
